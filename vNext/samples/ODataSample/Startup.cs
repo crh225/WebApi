@@ -21,6 +21,7 @@ namespace ODataSample.Web
 		{
 			var host = new WebHostBuilder()
 				.CaptureStartupErrors(true)
+				
 //				.ConfigureLogging(options => options.AddDebug())
 //.UseConfiguration(config)
 				
@@ -67,6 +68,7 @@ namespace ODataSample.Web
 			services.AddEntityFrameworkSqlServer();
 			services.AddMvc();
 			services.AddMvcDnx();
+
 			services.AddCors(options =>
 			{
 				options.AddPolicy("AllowAll",

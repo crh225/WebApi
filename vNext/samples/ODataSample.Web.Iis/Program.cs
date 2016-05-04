@@ -11,6 +11,7 @@ namespace ODataSample.Web
 		{
 			var config = new ConfigurationBuilder()
 				 .AddCommandLine(args)
+				 .AddJsonFile("appsettings.json")
 				 .AddEnvironmentVariables(prefix: "ASPNETCORE_")
 				 .Build();
 
@@ -18,7 +19,8 @@ namespace ODataSample.Web
 				.UseConfiguration(config)
 				.UseEnvironment("Development")
 				.UseKestrel()
-				.UseIISIntegration());
+				.UseIISIntegration()
+				);
 		}
 
 		private static void MicroApp(params string[] args)

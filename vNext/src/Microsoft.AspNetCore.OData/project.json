@@ -4,10 +4,10 @@
 
   "dependencies": {
     "Microsoft.OData.Core": "6.15.0",
-    "Microsoft.AspNetCore.Mvc": "1.0.0-rc3-*",
-    "Microsoft.AspNetCore.Mvc.Core": "1.0.0-rc3-*",
-    "Microsoft.AspNetCore.Mvc.WebApiCompatShim": "1.0.0-rc3-*",
-    "Microsoft.EntityFrameworkCore": "1.0.0-rc3-*"
+    "Microsoft.AspNetCore.Mvc": "1.0.0-rc2-*",
+    "Microsoft.AspNetCore.Mvc.Core": "1.0.0-rc2-*",
+    "Microsoft.AspNetCore.Mvc.WebApiCompatShim": "1.0.0-rc2-*",
+    "Microsoft.EntityFrameworkCore": "1.0.0-rc2-*"
   },
 
   "frameworks": {
