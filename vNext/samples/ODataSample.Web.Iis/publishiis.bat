@@ -5,6 +5,7 @@ echo Clean up first
 call rd "../Iis" /Q /S
 echo Restore packages and build if necessary
 call dotnet restore > restore.txt
+call dotnet build
 echo Publish
 call dotnet publish -c Release -o "../Iis"
 echo Copy the main project's views and general www files

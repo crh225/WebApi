@@ -8,7 +8,6 @@
   "dependencies": {
     "Microsoft.AspNetCore.Mvc": "1.0.0-rc2-20774",
     "Microsoft.AspNetCore.Mvc.Core": "1.0.0-rc2-20774",
-    "Microsoft.AspNetCore.Mvc.Dnx": "1.0.0-rc2-20766",
     "Microsoft.AspNetCore.Diagnostics": "1.0.0-rc2-20774",
     "Microsoft.AspNetCore.IISPlatformHandler": "1.0.0-rc2-20587",
     "Microsoft.EntityFrameworkCore.SqlServer": "1.0.0-rc2-20774",

@@ -8,6 +8,7 @@
   "dependencies": {
     "Microsoft.AspNetCore.Mvc.Razor": "1.0.0-rc2-20446",
     "Microsoft.AspNetCore.Mvc.TagHelpers": "1.0.0-rc2-20774",
+    "Microsoft.AspNetCore.Mvc.Dnx": "1.0.0-rc2-20766",
     "Microsoft.AspNetCore.Hosting": "1.0.0-rc2-20446",
     "Microsoft.AspNetCore.WebUtilities": "1.0.0-rc2-20446",
     "Microsoft.AspNetCore.IISPlatformHandler": "1.0.0-rc2-20587",

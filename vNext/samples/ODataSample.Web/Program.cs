@@ -9,11 +9,12 @@ namespace ODataSample.Web
 		public static void Main(string[] args)
 		{
 			var config = new ConfigurationBuilder()
-				 .AddEnvironmentVariables(prefix: "ASPNETCORE_")
-				 .Build();
-			StartupBase.Init<Startup>(host => host
+				.AddEnvironmentVariables(prefix: "ASPNETCORE_")
+				.Build();
+
+			StartupBase.Init<Startup>(
+				host => host
 				.UseConfiguration(config)
-				//.UseDefaultHostingConfiguration(args)
 				.UseIISPlatformHandlerUrl()
 				.UseKestrel());
 		}

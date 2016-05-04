@@ -1,17 +1,16 @@
-﻿using System;
+using System;
+using System.Diagnostics;
 using System.Reflection;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.OData.Extensions;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
-using ODataSample.Web.Models;
+using Microsoft.AspNetCore.OData.Extensions;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.PlatformAbstractions;
+using Microsoft.Extensions.DependencyInjection;
+using ODataSample.Web.Models;
 
 namespace ODataSample.Web
 {
@@ -20,20 +19,11 @@ namespace ODataSample.Web
 		public static void Init<TStartup>(Action<IWebHostBuilder> building = null, params string[] args) where TStartup : class
 		{
 			var host = new WebHostBuilder()
-				.CaptureStartupErrors(true)
-				
-//				.ConfigureLogging(options => options.AddDebug())
-//.UseConfiguration(config)
-				
-				;
+				.CaptureStartupErrors(true);
+
 			building?.Invoke(host);
-			//.UseIISIntegration()
 			
-			host
-				//.UseStartup("ODataSaple.Web")
-				//.UseKestrel()
-				.UseStartup<TStartup>()
-				;
+			host.UseStartup<TStartup>();
 			host.Build().Run();
 		}
 
@@ -61,13 +51,12 @@ namespace ODataSample.Web
 			builder.Build();
 		}
 
-		public void ConfigureServices(IServiceCollection services)
+		public virtual void ConfigureServices(IServiceCollection services)
 		{
 			services.AddEntityFramework()
 				.AddDbContext<ApplicationDbContext>();
 			services.AddEntityFrameworkSqlServer();
 			services.AddMvc();
-			services.AddMvcDnx();
 
 			services.AddCors(options =>
 			{
@@ -75,7 +64,7 @@ namespace ODataSample.Web
 					builder =>
 					{
 						builder //.AllowAnyOrigin()
-								//.AllowAnyHeader()
+							//.AllowAnyHeader()
 							.AllowAnyMethod()
 							.AllowCredentials();
 					});
@@ -180,9 +169,9 @@ namespace ODataSample.Web
 					.Function("ShortName")
 					.Returns<string>();
 				var validateField =
-				builder
-					.Action("ValidateField")
-					.Returns<string>();
+					builder
+						.Action("ValidateField")
+						.Returns<string>();
 				validateField.Parameter<string>("SetName");
 				validateField.Parameter<string>("Name");
 				validateField.Parameter<string>("Value");
@@ -254,27 +243,6 @@ namespace ODataSample.Web
 				});
 
 			//app.UseMvcWithDefaultRoute();
-		}
-	}
-
-	public class ReflectionTypeLoadExceptionMiddleware
-	{
-		private readonly RequestDelegate _next;
-
-		public ReflectionTypeLoadExceptionMiddleware(RequestDelegate next)
-		{
-			_next = next;
-		}
-
-		public async Task Invoke(HttpContext context)
-		{
-			try
-			{
-				await this._next(context);
-			}
-			catch (ReflectionTypeLoadException ex)
-			{
-			}
 		}
 	}
 }
