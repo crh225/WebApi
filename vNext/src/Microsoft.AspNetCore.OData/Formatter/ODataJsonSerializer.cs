@@ -103,7 +103,7 @@ namespace Microsoft.AspNetCore.OData.Formatter
 				// TODO: 1604 Convert webapi.odata's ODataPath to ODL's ODataPath, or use ODL's ODataPath.
 				SelectAndExpand = Request.ODataProperties().SelectExpandClause,
 				// TODO: Support $apply
-				//Apply = Request.ODataProperties().ApplyClause,
+				Apply = Request.ODataProperties().ApplyClause,
 				Path = (path == null || IsOperationPath(path)) ? null : path.ODLPath,
 			};
 
@@ -221,16 +221,16 @@ namespace Microsoft.AspNetCore.OData.Formatter
 			}
 			else
 			{
-				// TODO: Support $apply
-				// Currently don't support $apply
-				//var applyClause = Request.ODataProperties().ApplyClause;
-				//// get the most appropriate serializer given that we support inheritance.
-				//if (applyClause == null)
-				//{
-				//	type = value == null ? type : value.GetType();
-				//}
+                // TODO: Support $apply
+                // Currently don't support $apply
+                var applyClause = Request.ODataProperties().ApplyClause;
+                // get the most appropriate serializer given that we support inheritance.
+                if (applyClause == null)
+                {
+                    type = value?.GetType() ?? type;
+                }
 
-				serializer = serializerProvider.GetODataPayloadSerializer(model, type, Request);
+                serializer = serializerProvider.GetODataPayloadSerializer(model, type, Request);
 				if (serializer == null)
 				{
 					string message = Error.Format(SRResources.TypeCannotBeSerialized, type.Name, typeof(ODataJsonSerializer).Name);

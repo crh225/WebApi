@@ -1,8 +1,7 @@
 ﻿using System;
 using System.Linq;
-using Microsoft.AspNetCore.Mvc.Infrastructure;
+using System.Web.OData.Query.Validators;
 using Microsoft.AspNetCore.OData.Common;
-using Microsoft.AspNetCore.OData.Properties;
 using Microsoft.AspNetCore.OData.Query.Expressions;
 using Microsoft.OData.Core.UriParser;
 using Microsoft.OData.Core.UriParser.Semantic;
@@ -18,6 +17,11 @@ namespace Microsoft.AspNetCore.OData.Query
     {
         private FilterClause _filterClause;
         private readonly ODataQueryOptionParser _queryOptionParser;
+
+        /// <summary>
+        /// Gets or sets the Filter Query Validator
+        /// </summary>
+        public FilterQueryValidator Validator { get; set; }
 
         /// <summary>
         /// Initialize a new instance of <see cref="FilterQueryOption"/> based on the raw $filter value and 
@@ -45,6 +49,7 @@ namespace Microsoft.AspNetCore.OData.Query
 
             Context = context;
             RawValue = rawValue;
+            Validator = new FilterQueryValidator();
             _queryOptionParser = queryOptionParser;
         }
 
@@ -104,6 +109,23 @@ namespace Microsoft.AspNetCore.OData.Query
             
             var filter = FilterBinder.Bind(FilterClause, Context.ElementClrType, Context.Model, assembliesResolver, querySettings);
             return ExpressionHelpers.Where(query, filter, Context.ElementClrType);
+        }
+
+        /// <summary>
+        /// Validate the filter query based on the given <paramref name="validationSettings"/>. It throws an ODataException if validation failed.
+        /// </summary>
+        /// <param name="validationSettings">The <see cref="ODataValidationSettings"/> instance which contains all the validation settings.</param>
+        public void Validate(ODataValidationSettings validationSettings)
+        {
+            if (validationSettings == null)
+            {
+                throw Error.ArgumentNull("validationSettings");
+            }
+
+            if (Validator != null)
+            {
+                Validator.Validate(this, validationSettings);
+            }
         }
     }
 }

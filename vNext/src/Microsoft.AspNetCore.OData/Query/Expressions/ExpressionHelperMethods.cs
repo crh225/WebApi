@@ -24,6 +24,7 @@ namespace Microsoft.AspNetCore.OData.Query.Expressions
         private static MethodInfo _thenByMethod = GenericMethodOf(_ => Queryable.ThenBy<int, int>(default(IOrderedQueryable<int>), default(Expression<Func<int, int>>)));
         private static MethodInfo _thenByDescendingMethod = GenericMethodOf(_ => Queryable.ThenByDescending<int, int>(default(IOrderedQueryable<int>), default(Expression<Func<int, int>>)));
         private static MethodInfo _countMethod = GenericMethodOf(_ => Queryable.LongCount<int>(default(IQueryable<int>)));
+        private static MethodInfo _groupByMethod = GenericMethodOf(_ => Queryable.GroupBy<int, int>(default(IQueryable<int>), default(Expression<Func<int, int>>)));
         private static MethodInfo _skipMethod = GenericMethodOf(_ => Queryable.Skip<int>(default(IQueryable<int>), default(int)));
         private static MethodInfo _whereMethod = GenericMethodOf(_ => Queryable.Where<int>(default(IQueryable<int>), default(Expression<Func<int, bool>>)));
 
@@ -52,7 +53,30 @@ namespace Microsoft.AspNetCore.OData.Query.Expressions
 		private static MethodInfo _enumerableOrderByMethod = GenericMethodOf(_ => Enumerable.OrderBy<int, int>(default(IEnumerable<int>), default(Func<int, int>)));
 		private static MethodInfo _enumerableSkipMethod = GenericMethodOf(_ => Enumerable.Skip<int>(default(IEnumerable<int>), default(int)));
 
-		public static MethodInfo EnumerableSkipGeneric
+        private static Dictionary<Type, MethodInfo> _sumMethods = GetQueryableAggregationMethods("Sum");
+
+        private static MethodInfo _minMethod = GenericMethodOf(_ => Queryable.Min<int, int>(default(IQueryable<int>), default(Expression<Func<int, int>>)));
+        private static MethodInfo _maxMethod = GenericMethodOf(_ => Queryable.Max<int, int>(default(IQueryable<int>), default(Expression<Func<int, int>>)));
+
+        private static MethodInfo _distinctMethod = GenericMethodOf(_ => Queryable.Distinct<int>(default(IQueryable<int>)));
+
+        //Unlike the Sum method, the return types are not unique and do not match the input type of the expression.
+        //Inspecting the 2nd parameters expression's function's 2nd argument is too specific for the GetQueryableAggregationMethods        
+        private static Dictionary<Type, MethodInfo> _averageMethods = new Dictionary<Type, MethodInfo>()
+        {
+            { typeof(int), GenericMethodOf(_ => Queryable.Average<string>(default(IQueryable<string>), default(Expression<Func<string, int>>))) },
+            { typeof(int?), GenericMethodOf(_ => Queryable.Average<string>(default(IQueryable<string>), default(Expression<Func<string, int?>>))) },
+            { typeof(long), GenericMethodOf(_ => Queryable.Average<string>(default(IQueryable<string>), default(Expression<Func<string, long>>))) },
+            { typeof(long?), GenericMethodOf(_ => Queryable.Average<string>(default(IQueryable<string>), default(Expression<Func<string, long?>>))) },
+            { typeof(float), GenericMethodOf(_ => Queryable.Average<string>(default(IQueryable<string>), default(Expression<Func<string, float>>))) },
+            { typeof(float?), GenericMethodOf(_ => Queryable.Average<string>(default(IQueryable<string>), default(Expression<Func<string, float?>>))) },
+            { typeof(decimal), GenericMethodOf(_ => Queryable.Average<string>(default(IQueryable<string>), default(Expression<Func<string, decimal>>))) },
+            { typeof(decimal?), GenericMethodOf(_ => Queryable.Average<string>(default(IQueryable<string>), default(Expression<Func<string, decimal?>>))) },
+            { typeof(double), GenericMethodOf(_ => Queryable.Average<string>(default(IQueryable<string>), default(Expression<Func<string, double>>))) },
+            { typeof(double?), GenericMethodOf(_ => Queryable.Average<string>(default(IQueryable<string>), default(Expression<Func<string, double?>>))) },
+        };
+
+        public static MethodInfo EnumerableSkipGeneric
 		{
 			get { return _enumerableSkipMethod; }
 		}
@@ -100,6 +124,36 @@ namespace Microsoft.AspNetCore.OData.Query.Expressions
         public static MethodInfo QueryableCountGeneric
         {
             get { return _countMethod; }
+        }
+
+        public static Dictionary<Type, MethodInfo> QueryableSumGenerics
+        {
+            get { return _sumMethods; }
+        }
+
+        public static MethodInfo QueryableMin
+        {
+            get { return _minMethod; }
+        }
+
+        public static MethodInfo QueryableMax
+        {
+            get { return _maxMethod; }
+        }
+
+        public static Dictionary<Type, MethodInfo> QueryableAverageGenerics
+        {
+            get { return _averageMethods; }
+        }
+
+        public static MethodInfo QueryableDistinct
+        {
+            get { return _distinctMethod; }
+        }
+
+        public static MethodInfo QueryableGroupByGeneric
+        {
+            get { return _groupByMethod; }
         }
 
         public static MethodInfo QueryableTakeGeneric
@@ -201,6 +255,18 @@ namespace Microsoft.AspNetCore.OData.Query.Expressions
             Contract.Assert(lambdaExpression.Body.NodeType == ExpressionType.Call);
 
             return (lambdaExpression.Body as MethodCallExpression).Method.GetGenericMethodDefinition();
+        }
+
+        private static Dictionary<Type, MethodInfo> GetQueryableAggregationMethods(string methodName)
+        {
+            //Sum to not have generic by property method return type so have to generate a table
+            // Looking for methods like
+            // Queryable.Sum<TSource>(default(IQueryable<TSource>), default(Expression<Func<TSource, int?>>)))
+
+            return typeof(Queryable).GetMethods()
+                .Where(m => m.Name == methodName)
+                .Where(m => m.GetParameters().Count() == 2)
+                .ToDictionary(m => m.ReturnType);
         }
     }
 }

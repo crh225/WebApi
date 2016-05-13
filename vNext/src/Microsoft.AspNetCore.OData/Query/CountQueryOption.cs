@@ -9,6 +9,7 @@ using System.Web.Http;
 using Microsoft.AspNetCore.OData.Common;
 using Microsoft.AspNetCore.OData.Query.Expressions;
 using Microsoft.AspNetCore.OData.Query.Validators;
+using Microsoft.OData.Core;
 using Microsoft.OData.Core.UriParser;
 
 namespace Microsoft.AspNetCore.OData.Query

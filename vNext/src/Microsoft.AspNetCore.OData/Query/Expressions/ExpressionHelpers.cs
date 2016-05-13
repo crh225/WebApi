@@ -229,6 +229,18 @@ namespace Microsoft.AspNetCore.OData.Query.Expressions
             }
         }
 
+        public static IQueryable GroupBy(IQueryable query, Expression expression, Type type, Type wrapperType)
+        {
+            MethodInfo groupByMethod = ExpressionHelperMethods.QueryableGroupByGeneric.MakeGenericMethod(type, wrapperType);
+            return groupByMethod.Invoke(null, new object[] { query, expression }) as IQueryable;
+        }
+
+        public static IQueryable Select(IQueryable query, LambdaExpression expression, Type type)
+        {
+            MethodInfo selectMethod = ExpressionHelperMethods.QueryableSelectGeneric.MakeGenericMethod(type, expression.Body.Type);
+            return selectMethod.Invoke(null, new object[] { query, expression }) as IQueryable;
+        }
+
         private static LambdaExpression GetPropertyAccessLambda(Type type, string propertyName)
         {
             ParameterExpression odataItParameter = Expression.Parameter(type, "$it");

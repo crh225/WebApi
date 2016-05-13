@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Diagnostics.Contracts;
 using System.Linq;
@@ -7,6 +8,7 @@ using System.Reflection;
 using Microsoft.AspNetCore.OData.Builder;
 using Microsoft.AspNetCore.OData.Common;
 using Microsoft.AspNetCore.OData.Formatter;
+using Microsoft.AspNetCore.OData.Query.Expressions;
 using Microsoft.OData.Edm;
 using Microsoft.OData.Edm.Library;
 
@@ -55,26 +57,117 @@ namespace Microsoft.AspNetCore.OData.Extensions
 			return edmProperty;
 		}
 
-		public static IEdmType GetEdmType(this IEdmModel model, Type clrType)
+		public static IEdmType GetEdmType(this IEdmModel edmModel, Type clrType)
 		{
-			if (model == null)
-			{
-				throw Error.ArgumentNull("model");
-			}
+            if (edmModel == null)
+            {
+                throw Error.ArgumentNull("edmModel");
+            }
 
-			return model.FindDeclaredType(clrType.EdmFullName());
-		}
+            if (clrType == null)
+            {
+                throw Error.ArgumentNull("clrType");
+            }
 
-		/// <summary>
-		///     Gets the <see cref="ActionLinkBuilder" /> to be used while generating action links for the given action.
-		/// </summary>
-		/// <param name="model">The <see cref="IEdmModel" /> containing the action.</param>
-		/// <param name="action">The action for which the link builder is needed.</param>
-		/// <returns>
-		///     The <see cref="ActionLinkBuilder" /> for the given action if one is set; otherwise, a new
-		///     <see cref="ActionLinkBuilder" /> that generates action links following OData URL conventions.
-		/// </returns>
-		[SuppressMessage("Microsoft.Design", "CA1011:ConsiderPassingBaseTypesAsParameters",
+
+            return GetEdmType(edmModel, clrType, testCollections: true);
+        }
+
+        private static IEdmType GetEdmType(IEdmModel edmModel, Type clrType, bool testCollections)
+        {
+            Contract.Assert(edmModel != null);
+            Contract.Assert(clrType != null);
+
+            IEdmPrimitiveType primitiveType = clrType.GetEdmPrimitiveTypeOrNull();
+            if (primitiveType != null)
+            {
+                return primitiveType;
+            }
+            else
+            {
+                if (testCollections)
+                {
+                    Type enumerableOfT = ExtractGenericInterface(clrType, typeof(IEnumerable<>));
+                    if (enumerableOfT != null)
+                    {
+                        Type elementClrType = enumerableOfT.GetGenericArguments()[0];
+
+                        // IEnumerable<SelectExpandWrapper<T>> is a collection of T.
+                        Type entityType;
+                        if (IsSelectExpandWrapper(elementClrType, out entityType))
+                        {
+                            elementClrType = entityType;
+                        }
+
+                        IEdmType elementType = GetEdmType(edmModel, elementClrType, testCollections: false);
+                        if (elementType != null)
+                        {
+                            return new EdmCollectionType(elementType.ToEdmTypeReference(elementClrType.IsNullable()));
+                        }
+                    }
+                }
+
+                Type underlyingType = TypeHelper.GetUnderlyingTypeOrSelf(clrType);
+                if (underlyingType.GetTypeInfo().IsEnum)
+                {
+                    clrType = underlyingType;
+                }
+
+                // search for the ClrTypeAnnotation and return it if present
+                IEdmType returnType =
+                    edmModel
+                    .SchemaElements
+                    .OfType<IEdmType>()
+                    .Select(edmType => new { EdmType = edmType, Annotation = edmModel.GetAnnotationValue<ClrTypeAnnotation>(edmType) })
+                    .Where(tuple => tuple.Annotation != null && tuple.Annotation.ClrType == clrType)
+                    .Select(tuple => tuple.EdmType)
+                    .SingleOrDefault();
+
+                // default to the EdmType with the same name as the ClrType name 
+                returnType = returnType ?? edmModel.FindType(clrType.EdmFullName());
+
+                if (clrType.GetTypeInfo().BaseType != null)
+                {
+                    // go up the inheritance tree to see if we have a mapping defined for the base type.
+                    returnType = returnType ?? GetEdmType(edmModel, clrType.GetTypeInfo().BaseType, testCollections);
+                }
+                return returnType;
+            }
+        }
+
+        private static bool IsSelectExpandWrapper(Type type, out Type entityType)
+        {
+            if (type == null)
+            {
+                entityType = null;
+                return false;
+            }
+
+            if (type.GetTypeInfo().IsGenericType && type.GetGenericTypeDefinition() == typeof(SelectExpandWrapper<>))
+            {
+                entityType = type.GetGenericArguments()[0];
+                return true;
+            }
+
+            return IsSelectExpandWrapper(type.GetTypeInfo().BaseType, out entityType);
+        }
+
+        private static Type ExtractGenericInterface(Type queryType, Type interfaceType)
+        {
+            Func<Type, bool> matchesInterface = t => t.GetTypeInfo().IsGenericType && t.GetGenericTypeDefinition() == interfaceType;
+            return matchesInterface(queryType) ? queryType : queryType.GetInterfaces().FirstOrDefault(matchesInterface);
+        }
+
+        /// <summary>
+        ///     Gets the <see cref="ActionLinkBuilder" /> to be used while generating action links for the given action.
+        /// </summary>
+        /// <param name="model">The <see cref="IEdmModel" /> containing the action.</param>
+        /// <param name="action">The action for which the link builder is needed.</param>
+        /// <returns>
+        ///     The <see cref="ActionLinkBuilder" /> for the given action if one is set; otherwise, a new
+        ///     <see cref="ActionLinkBuilder" /> that generates action links following OData URL conventions.
+        /// </returns>
+        [SuppressMessage("Microsoft.Design", "CA1011:ConsiderPassingBaseTypesAsParameters",
 			Justification = "IEdmActionImport is more relevant here.")]
 		public static ActionLinkBuilder GetActionLinkBuilder(this IEdmModel model, IEdmAction action)
 		{

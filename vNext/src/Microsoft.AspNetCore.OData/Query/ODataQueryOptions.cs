@@ -5,6 +5,7 @@ using System.Diagnostics.Contracts;
 using System.Globalization;
 using System.Linq;
 using System.Reflection;
+using System.Web.OData.Query.Validators;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Extensions;
 using Microsoft.AspNetCore.OData.Common;
@@ -79,10 +80,15 @@ namespace Microsoft.AspNetCore.OData.Query
 		/// </summary>
 		public SelectExpandQueryOption SelectExpand { get; private set; }
 
-		/// <summary>
-		/// Gets the <see cref="FilterQueryOption"/>.
-		/// </summary>
-		public FilterQueryOption Filter { get; private set; }
+        /// <summary>
+        /// Gets the <see cref="ApplyQueryOption"/>.
+        /// </summary>
+        public ApplyQueryOption Apply { get; private set; }
+
+        /// <summary>
+        /// Gets the <see cref="FilterQueryOption"/>.
+        /// </summary>
+        public FilterQueryOption Filter { get; private set; }
 
 		/// <summary>
 		/// Gets the <see cref="OrderByQueryOption"/>.
@@ -94,109 +100,218 @@ namespace Microsoft.AspNetCore.OData.Query
 		/// </summary>
 		public CountQueryOption Count { get; private set; }
 
-		/// <summary>
-		/// Apply the individual query to the given IQueryable in the right order.
-		/// </summary>
-		/// <param name="query">The original <see cref="IQueryable"/>.</param>
-		/// <param name="querySettings">The settings to use in query composition.</param>
-		/// <param name="ignoreQueryOptions">The query parameters that are already applied in queries.</param>
-		/// <returns>The new <see cref="IQueryable"/> after the query has been applied to.</returns>
-		public virtual IQueryable ApplyTo(IQueryable query, ODataQuerySettings querySettings, AllowedQueryOptions ignoreQueryOptions)
-		{
-			_ignoreQueryOptions = ignoreQueryOptions;
-			if (query == null)
-			{
-				throw Error.ArgumentNull("query");
-			}
+        /// <summary>
+        /// Gets or sets the query validator.
+        /// </summary>
+        public ODataQueryValidator Validator { get; set; }
 
-			// Construct the actual query and apply them in the following order: filter
-			if (IsAvailableODataQueryOption(Filter, AllowedQueryOptions.Filter))
-			{
-				query = Filter.ApplyTo(query, querySettings, _assembliesResolver);
-			}
+        /// <summary>
+        /// Apply the individual query to the given IQueryable in the right order.
+        /// </summary>
+        /// <param name="query">The original <see cref="IQueryable"/>.</param>
+        /// <returns>The new <see cref="IQueryable"/> after the query has been applied to.</returns>
+        public virtual IQueryable ApplyTo(IQueryable query)
+        {
+            return ApplyTo(query, new ODataQuerySettings());
+        }
 
-			if (IsAvailableODataQueryOption(Count, AllowedQueryOptions.Count))
-			{
-				if (Request.ODataProperties().TotalCountFunc == null)
-				{
-					Func<long> countFunc = Count.GetEntityCountFunc(query);
-					if (countFunc != null)
-					{
-						Request.ODataProperties().TotalCountFunc = countFunc;
-					}
-				}
+        /// <summary>
+        /// Apply the individual query to the given IQueryable in the right order.
+        /// </summary>
+        /// <param name="query">The original <see cref="IQueryable"/>.</param>
+        /// <param name="ignoreQueryOptions">The query parameters that are already applied in queries.</param>
+        /// <returns>The new <see cref="IQueryable"/> after the query has been applied to.</returns>
+        public virtual IQueryable ApplyTo(IQueryable query, AllowedQueryOptions ignoreQueryOptions)
+        {
+            _ignoreQueryOptions = ignoreQueryOptions;
+            return ApplyTo(query, new ODataQuerySettings());
+        }
 
-				if (ODataCountMediaTypeMapping.IsCountRequest(Request))
-				{
-					return query;
-				}
-			}
+        /// <summary>
+        /// Apply the individual query to the given IQueryable in the right order.
+        /// </summary>
+        /// <param name="query">The original <see cref="IQueryable"/>.</param>
+        /// <param name="querySettings">The settings to use in query composition.</param>
+        /// <param name="ignoreQueryOptions">The query parameters that are already applied in queries.</param>
+        /// <returns>The new <see cref="IQueryable"/> after the query has been applied to.</returns>
+        public virtual IQueryable ApplyTo(IQueryable query, ODataQuerySettings querySettings,
+            AllowedQueryOptions ignoreQueryOptions)
+        {
+            _ignoreQueryOptions = ignoreQueryOptions;
+            return ApplyTo(query, querySettings);
+        }
 
-			OrderByQueryOption orderBy = OrderBy;
+        /// <summary>
+        /// Apply the individual query to the given IQueryable in the right order.
+        /// </summary>
+        /// <param name="query">The original <see cref="IQueryable"/>.</param>
+        /// <param name="querySettings">The settings to use in query composition.</param>
+        /// <returns>The new <see cref="IQueryable"/> after the query has been applied to.</returns>
+        [SuppressMessage(
+            "Microsoft.Maintainability",
+            "CA1502:AvoidExcessiveComplexity",
+            Justification = "These are simple conversion function and cannot be split up.")]
+        public virtual IQueryable ApplyTo(IQueryable query, ODataQuerySettings querySettings)
+        {
+            if (query == null)
+            {
+                throw Error.ArgumentNull("query");
+            }
 
-			// $skip or $top require a stable sort for predictable results.
-			// Result limits require a stable sort to be able to generate a next page link.
-			// If either is present in the query and we have permission,
-			// generate an $orderby that will produce a stable sort.
-			if (querySettings.EnsureStableOrdering &&
-				(IsAvailableODataQueryOption(Skip, AllowedQueryOptions.Skip) ||
-				 IsAvailableODataQueryOption(Top, AllowedQueryOptions.Top) ||
-				 querySettings.PageSize.HasValue))
-			{
-				// If there is no OrderBy present, we manufacture a default.
-				// If an OrderBy is already present, we add any missing
-				// properties necessary to make a stable sort.
-				// Instead of failing early here if we cannot generate the OrderBy,
-				// let the IQueryable backend fail (if it has to).
-				orderBy = orderBy == null
-							? GenerateDefaultOrderBy(Context)
-							: EnsureStableSortOrderBy(orderBy, Context);
-			}
+            if (querySettings == null)
+            {
+                throw Error.ArgumentNull("querySettings");
+            }
 
-			if (IsAvailableODataQueryOption(orderBy, AllowedQueryOptions.OrderBy))
-			{
-				query = orderBy.ApplyTo(query, querySettings);
-			}
-			if (IsAvailableODataQueryOption(Skip, AllowedQueryOptions.Skip))
-			{
-				query = Skip.ApplyTo(query, querySettings);
-			}
-			if (IsAvailableODataQueryOption(Top, AllowedQueryOptions.Top))
-			{
-				query = Top.ApplyTo(query, querySettings);
-			}
+            IQueryable result = query;
 
-			AddAutoExpandProperties(querySettings);
+            // First apply $apply
+            // Section 3.15 of the spec http://docs.oasis-open.org/odata/odata-data-aggregation-ext/v4.0/cs01/odata-data-aggregation-ext-v4.0-cs01.html#_Toc378326311
+            if (IsAvailableODataQueryOption(Apply, AllowedQueryOptions.Apply))
+            {
+                result = Apply.ApplyTo(result, querySettings, _assembliesResolver);
+                Request.ODataProperties().ApplyClause = Apply.ApplyClause;
+                Context.ElementClrType = Apply.ResultClrType;
+            }
 
-			if (SelectExpand != null)
-			{
-				var tempResult = ApplySelectExpand(query, querySettings);
-				if (tempResult != default(IQueryable))
-				{
-					query = tempResult;
-				}
-			}
+            // Construct the actual query and apply them in the following order: filter, orderby, skip, top
+            if (IsAvailableODataQueryOption(Filter, AllowedQueryOptions.Filter))
+            {
+                result = Filter.ApplyTo(result, querySettings, _assembliesResolver);
+            }
 
-			if (querySettings.PageSize.HasValue)
-			{
-				bool resultsLimited = true;
-				query = LimitResults(query, querySettings.PageSize.Value, out resultsLimited);
-				var uriString = Request.GetDisplayUrl();
-				if (!string.IsNullOrWhiteSpace(uriString))
-				{
-					var uri = new Uri(uriString);
-					if (resultsLimited && uri != null && uri.IsAbsoluteUri && Request.ODataProperties().NextLink == null)
-					{
-						Uri nextPageLink = Request.GetNextPageLink(querySettings.PageSize.Value);
-						Request.ODataProperties().NextLink = nextPageLink;
-					}
-				}
-			}
+            if (IsAvailableODataQueryOption(Count, AllowedQueryOptions.Count))
+            {
+                if (Request.ODataProperties().TotalCountFunc == null)
+                {
+                    Func<long> countFunc = Count.GetEntityCountFunc(result);
+                    if (countFunc != null)
+                    {
+                        Request.ODataProperties().TotalCountFunc = countFunc;
+                    }
+                }
 
-			return query;
-		}
+                if (ODataCountMediaTypeMapping.IsCountRequest(Request))
+                {
+                    return result;
+                }
+            }
 
-		internal void AddAutoExpandProperties(ODataQuerySettings querySettings)
+            OrderByQueryOption orderBy = OrderBy;
+
+            // $skip or $top require a stable sort for predictable results.
+            // Result limits require a stable sort to be able to generate a next page link.
+            // If either is present in the query and we have permission,
+            // generate an $orderby that will produce a stable sort.
+            if (querySettings.EnsureStableOrdering &&
+                (IsAvailableODataQueryOption(Skip, AllowedQueryOptions.Skip) ||
+                 IsAvailableODataQueryOption(Top, AllowedQueryOptions.Top) ||
+                 querySettings.PageSize.HasValue))
+            {
+                // If there is no OrderBy present, we manufacture a default.
+                // If an OrderBy is already present, we add any missing
+                // properties necessary to make a stable sort.
+                // Instead of failing early here if we cannot generate the OrderBy,
+                // let the IQueryable backend fail (if it has to).
+                orderBy = orderBy == null
+                            ? GenerateDefaultOrderBy(Context)
+                            : EnsureStableSortOrderBy(orderBy, Context);
+            }
+
+            if (IsAvailableODataQueryOption(orderBy, AllowedQueryOptions.OrderBy))
+            {
+                result = orderBy.ApplyTo(result, querySettings);
+            }
+
+            if (IsAvailableODataQueryOption(Skip, AllowedQueryOptions.Skip))
+            {
+                result = Skip.ApplyTo(result, querySettings);
+            }
+
+            if (IsAvailableODataQueryOption(Top, AllowedQueryOptions.Top))
+            {
+                result = Top.ApplyTo(result, querySettings);
+            }
+
+            AddAutoExpandProperties(querySettings);
+
+            if (SelectExpand != null)
+            {
+                var tempResult = ApplySelectExpand(result, querySettings);
+                if (tempResult != default(IQueryable))
+                {
+                    result = tempResult;
+                }
+            }
+
+            if (querySettings.PageSize.HasValue)
+            {
+                bool resultsLimited;
+                result = LimitResults(result, querySettings.PageSize.Value, out resultsLimited);
+                if (resultsLimited && Request.GetDisplayUrl() != null && new Uri(Request.GetDisplayUrl()).IsAbsoluteUri && Request.ODataProperties().NextLink == null)
+                {
+                    Uri nextPageLink = Request.GetNextPageLink(querySettings.PageSize.Value);
+                    Request.ODataProperties().NextLink = nextPageLink;
+                }
+            }
+
+            return result;
+        }
+
+        /// <summary>
+        /// Apply the individual query to the given IQueryable in the right order.
+        /// </summary>
+        /// <param name="entity">The original entity.</param>
+        /// <param name="querySettings">The <see cref="ODataQuerySettings"/> that contains all the query application related settings.</param>
+        /// <param name="ignoreQueryOptions">The query parameters that are already applied in queries.</param>  
+        /// <returns>The new entity after the $select and $expand query has been applied to.</returns>     
+        /// <remarks>Only $select and $expand query options can be applied on single entities. This method throws if the query contains any other
+        /// query options.</remarks>
+        public virtual object ApplyTo(object entity, ODataQuerySettings querySettings, AllowedQueryOptions ignoreQueryOptions)
+        {
+            _ignoreQueryOptions = ignoreQueryOptions;
+            return ApplyTo(entity, new ODataQuerySettings());
+        }
+
+        /// <summary>
+        /// Applies the query to the given entity using the given <see cref="ODataQuerySettings"/>.
+        /// </summary>
+        /// <param name="entity">The original entity.</param>
+        /// <param name="querySettings">The <see cref="ODataQuerySettings"/> that contains all the query application related settings.</param>
+        /// <returns>The new entity after the $select and $expand query has been applied to.</returns>
+        /// <remarks>Only $select and $expand query options can be applied on single entities. This method throws if the query contains any other
+        /// query options.</remarks>
+        public virtual object ApplyTo(object entity, ODataQuerySettings querySettings)
+        {
+            if (entity == null)
+            {
+                throw Error.ArgumentNull("entity");
+            }
+            if (querySettings == null)
+            {
+                throw Error.ArgumentNull("querySettings");
+            }
+
+            if (Filter != null || OrderBy != null || Top != null || Skip != null || Count != null)
+            {
+                throw Error.InvalidOperation(SRResources.NonSelectExpandOnSingleEntity);
+            }
+
+            AddAutoExpandProperties(querySettings);
+
+            if (SelectExpand != null)
+            {
+                var result = ApplySelectExpand(entity, querySettings);
+                if (result != default(object))
+                {
+                    return result;
+                }
+            }
+
+            return entity;
+        }
+
+        internal void AddAutoExpandProperties(ODataQuerySettings querySettings)
 		{
 			var autoExpandRawValue = GetAutoExpandRawValue(querySettings.SearchDerivedTypeWhenAutoExpand);
 			if (autoExpandRawValue != null && !autoExpandRawValue.Equals(RawValues.Expand))
@@ -442,10 +557,66 @@ namespace Microsoft.AspNetCore.OData.Query
 			}
 		}
 
-		public TopQueryOption Top { get; set; }
+        /// <summary>
+        /// Check if the given query option is an OData system query option.
+        /// </summary>
+        /// <param name="queryOptionName">The name of the query option.</param>
+        /// <returns>Returns <c>true</c> if the query option is an OData system query option.</returns>
+        public static bool IsSystemQueryOption(string queryOptionName)
+        {
+            return queryOptionName == "$orderby" ||
+                 queryOptionName == "$filter" ||
+                 queryOptionName == "$top" ||
+                 queryOptionName == "$skip" ||
+                 queryOptionName == "$count" ||
+                 queryOptionName == "$expand" ||
+                 queryOptionName == "$select" ||
+                 queryOptionName == "$format" ||
+                 queryOptionName == "$skiptoken" ||
+                 queryOptionName == "$deltatoken" ||
+                 queryOptionName == "$apply";
+        }
+
+        /// <summary>
+        /// Check if the given query option is the supported query option.
+        /// </summary>
+        /// <param name="queryOptionName">The name of the query option.</param>
+        /// <returns>Returns <c>true</c> if the query option is the supported query option.</returns>
+        [SuppressMessage("Microsoft.Globalization", "CA1308:NormalizeStringsToUppercase",
+            Justification = "Need lower case string here.")]
+        public bool IsSupportedQueryOption(string queryOptionName)
+        {
+            if (!_queryOptionParser.Resolver.EnableCaseInsensitive)
+            {
+                return IsSystemQueryOption(queryOptionName);
+            }
+
+            var lowcaseQueryOptionName = queryOptionName.ToLowerInvariant();
+            return IsSystemQueryOption(lowcaseQueryOptionName);
+        }
+
+        public TopQueryOption Top { get; set; }
 		public SkipQueryOption Skip { get; set; }
 
-		private static void ThrowIfEmpty(string queryValue, string queryName)
+        /// <summary>
+        /// Validate all OData queries, including $skip, $top, $orderby and $filter, based on the given <paramref name="validationSettings"/>.
+        /// It throws an ODataException if validation failed.
+        /// </summary>
+        /// <param name="validationSettings">The <see cref="ODataValidationSettings"/> instance which contains all the validation settings.</param>
+        public virtual void Validate(ODataValidationSettings validationSettings)
+        {
+            if (validationSettings == null)
+            {
+                throw Error.ArgumentNull("validationSettings");
+            }
+
+            if (Validator != null)
+            {
+                Validator.Validate(this, validationSettings);
+            }
+        }
+
+        private static void ThrowIfEmpty(string queryValue, string queryName)
 		{
 			if (String.IsNullOrWhiteSpace(queryValue))
 			{

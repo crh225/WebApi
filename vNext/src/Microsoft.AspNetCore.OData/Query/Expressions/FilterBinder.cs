@@ -1399,7 +1399,7 @@ namespace Microsoft.AspNetCore.OData.Query.Expressions
         private Expression ConvertNonStandardPrimitives(Expression source)
         {
             bool isNonstandardEdmPrimitive;
-            Type conversionType = EdmLibHelpers.IsNonstandardEdmPrimitive(source.Type, out isNonstandardEdmPrimitive, _assembliesResolver);
+            Type conversionType = EdmLibHelpers.IsNonstandardEdmPrimitive(source.Type, _assembliesResolver, out isNonstandardEdmPrimitive);
 
             if (isNonstandardEdmPrimitive)
             {

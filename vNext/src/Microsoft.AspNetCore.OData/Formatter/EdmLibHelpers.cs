@@ -297,22 +297,34 @@ namespace Microsoft.AspNetCore.OData.Formatter
             QueryableRestrictionsAnnotation annotation = GetPropertyRestrictions(edmProperty, edmModel);
             return annotation == null ? false : annotation.Restrictions.NotNavigable;
         }
+        public static IEdmTypeReference GetEdmTypeReference2(this IEdmModel edmModel, Type clrType)
+        {
+            IEdmType edmType = edmModel.GetEdmType(clrType);
+            if (edmType != null)
+            {
+                bool isNullable = IsNullable(clrType);
+                return ToEdmTypeReference(edmType, isNullable);
+            }
+
+            return null;
+        }
 
         public static IEdmTypeReference GetEdmTypeReference(this IEdmModel edmModel, Type clrType)
         {
-            IEdmType edmType = GetEdmPrimitiveTypeOrNull(clrType);
-            if (edmType == null)
-            {
-                Type elementType;
-                if (clrType.IsCollection(out elementType))
-                {
-                    edmType = new EdmCollectionType(edmModel.GetEdmType(elementType).ToEdmTypeReference(IsNullable(elementType)));
-                }
-                else
-                {
-                    edmType = edmModel.GetEdmType(clrType);
-                }
-            }
+            IEdmType edmType = edmModel.GetEdmType(clrType);
+            //IEdmType edmType = GetEdmPrimitiveTypeOrNull(clrType);
+            //if (edmType == null)
+            //{
+            //    Type elementType;
+            //    if (clrType.IsCollection(out elementType))
+            //    {
+            //        edmType = new EdmCollectionType(edmModel.GetEdmType(elementType).ToEdmTypeReference(IsNullable(elementType)));
+            //    }
+            //    else
+            //    {
+            //        edmType = edmModel.GetEdmType(clrType);
+            //    }
+            //}
 
             if (edmType != null)
             {
@@ -383,7 +395,7 @@ namespace Microsoft.AspNetCore.OData.Formatter
             return null;
         }
 
-        public static IEdmPrimitiveType GetEdmPrimitiveTypeOrNull(Type clrType)
+        public static IEdmPrimitiveType GetEdmPrimitiveTypeOrNull(this Type clrType)
         {
             IEdmPrimitiveType primitiveType;
             return _builtInTypesMapping.TryGetValue(clrType, out primitiveType) ? primitiveType : null;
@@ -397,15 +409,12 @@ namespace Microsoft.AspNetCore.OData.Formatter
                 : null;
         }
         
-        public static Type IsNonstandardEdmPrimitive(Type type, AssembliesResolver assembliesResolver, out bool isNonstandardEdmPrimitive)
-        {
-            return IsNonstandardEdmPrimitive(type, out isNonstandardEdmPrimitive, assembliesResolver);
-        }
-
         // figures out if the given clr type is nonstandard edm primitive like uint, ushort, char[] etc.
         // and returns the corresponding clr type to which we map like uint => long.
-        public static Type IsNonstandardEdmPrimitive(Type type, out bool isNonstandardEdmPrimitive,
-			AssembliesResolver assembliesResolver)
+        public static Type IsNonstandardEdmPrimitive(
+            Type type, 
+            AssembliesResolver assembliesResolver,
+            out bool isNonstandardEdmPrimitive)
         {
             IEdmPrimitiveTypeReference edmType = GetEdmPrimitiveTypeReferenceOrNull(type);
             if (edmType == null)
@@ -470,8 +479,13 @@ namespace Microsoft.AspNetCore.OData.Formatter
 		{
 			return (type != null && typeof(DynamicTypeWrapper).IsAssignableFrom(type));
 		}
+        public static bool IsNotFilterable(IEdmProperty edmProperty, IEdmModel edmModel)
+        {
+            QueryableRestrictionsAnnotation annotation = GetPropertyRestrictions(edmProperty, edmModel);
+            return annotation == null ? false : annotation.Restrictions.NotFilterable;
+        }
 
-		public static bool IsNotSortable(IEdmProperty edmProperty, IEdmModel edmModel)
+        public static bool IsNotSortable(IEdmProperty edmProperty, IEdmModel edmModel)
 		{
 			var annotation = GetPropertyRestrictions(edmProperty, edmModel);
 			return annotation?.Restrictions.NotSortable ?? false;

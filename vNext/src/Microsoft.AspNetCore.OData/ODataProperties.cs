@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.WebApiCompatShim;
 using Microsoft.AspNetCore.OData.Common;
 using Microsoft.OData.Core;
+using Microsoft.OData.Core.UriParser.Aggregation;
 using Microsoft.OData.Core.UriParser.Semantic;
 using Microsoft.OData.Edm;
 using ODataPath = Microsoft.AspNetCore.OData.Routing.ODataPath;
@@ -12,10 +13,11 @@ namespace Microsoft.AspNetCore.OData
 {
 	public class ODataProperties
 	{
-		private const string TotalCountFuncKey = "System.Web.OData.TotalCountFunc";
-		private const string TotalCountKey = "System.Web.OData.TotalCount";
+		private const string TotalCountFuncKey = "Microsoft.AspNetCore.OData.TotalCountFunc";
+		private const string TotalCountKey = "Microsoft.AspNetCore.OData.TotalCount";
+        private const string ApplyClauseKey = "Microsoft.AspNetCore.OData.ApplyClause";
 
-		internal const string ODataServiceVersionHeader = "OData-Version";
+        internal const string ODataServiceVersionHeader = "OData-Version";
 
 		internal const ODataVersion DefaultODataVersion = ODataVersion.V4;
 
@@ -64,7 +66,29 @@ namespace Microsoft.AspNetCore.OData
 			}
 		}
 
-		public Uri NextLink { get; set; }
+        /// <summary>
+        /// Gets or sets the parsed OData <see cref="ApplyClause"/> of the request. The
+        /// <see cref="ODataMediaTypeFormatter"/> will use this information (if any) while writing the response for
+        /// this request.
+        /// </summary>
+        public ApplyClause ApplyClause
+        {
+            get
+            {
+                return GetValueOrNull<ApplyClause>(ApplyClauseKey);
+            }
+            set
+            {
+                if (value == null)
+                {
+                    throw Error.ArgumentNull("value");
+                }
+
+                _request.Properties[ApplyClauseKey] = value;
+            }
+        }
+
+        public Uri NextLink { get; set; }
 
 		public bool IsValidODataRequest { get; set; }
 
@@ -91,5 +115,18 @@ namespace Microsoft.AspNetCore.OData
 			//Contract.Assert(request != null);
 			//_request = request;
 		}
-	}
+
+        private T GetValueOrNull<T>(string propertyName) where T : class
+        {
+            object value;
+            if (_request.Properties.TryGetValue(propertyName, out value))
+            {
+                // Fairly big problem if following cast fails. Indicates something else is writing properties with
+                // names we've chosen. Do not silently return null because that will hide the problem.
+                return (T)value;
+            }
+
+            return null;
+        }
+    }
 }
