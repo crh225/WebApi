@@ -7,4 +7,8 @@ namespace Microsoft.AspNetCore.OData.Query
     {
         Expression<Func<T, bool>> Intercept(ODataQuerySettings querySettings, ODataQueryOptions queryOptions);
     }
+    public interface IODataQueryInterceptor2<T>
+    {
+        Expression<Func<T, bool>> Intercept(ODataQuerySettings querySettings, ODataQueryOptions queryOptions);
+    }
 }

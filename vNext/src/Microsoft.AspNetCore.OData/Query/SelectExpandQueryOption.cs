@@ -232,7 +232,8 @@ namespace Microsoft.AspNetCore.OData.Query
                 settings.HandleNullPropagation = HandleNullPropagationOption.True;
                 foreach (var expand in expandedNavigationSelectItems)
                 {
-                    queryable = Expand(queryable, Context.ElementClrType, expand.NavigationSource.Name);
+                    var segment = expand.PathToNavigationProperty.FirstSegment as NavigationPropertySegment;
+                    queryable = Expand(queryable, Context.ElementClrType, segment.NavigationProperty.Name);
                 }
                 queryable = Enumerate(queryable, Context.ElementClrType);
             }
