@@ -7,10 +7,11 @@ using Microsoft.AspNetCore.OData.Query.Expressions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OData.Edm;
 using ODataSample.Web.Models;
+using ODataSample.Web.OData;
 
 namespace ODataSample.Web.Controllers
 {
-	[EnableQuery]
+    [SecuredQuery]
 	[Route("odata/Customers")]
 	public class CustomersController : ODataCrudController<Customer, int>
 	{

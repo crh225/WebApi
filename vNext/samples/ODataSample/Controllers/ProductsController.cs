@@ -9,10 +9,11 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.OData.Edm;
 using Newtonsoft.Json.Linq;
 using ODataSample.Web.Models;
+using ODataSample.Web.OData;
 
 namespace ODataSample.Web.Controllers
 {
-	[EnableQuery]
+	[SecuredQuery]
 	[Route("odata/Products")]
 	//[EnableCors("AllowAll")]
 	public class ProductsController : ODataCrudController<Product, int>

@@ -5,10 +5,13 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using System.Linq.Expressions;
+using System.Reflection;
 using Microsoft.AspNetCore.OData.Common;
 using Microsoft.AspNetCore.OData.Formatter;
 using Microsoft.AspNetCore.OData.Query.Expressions;
 using Microsoft.AspNetCore.OData.Query.Validators;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.OData.Core.UriParser;
 using Microsoft.OData.Core.UriParser.Semantic;
 using Microsoft.OData.Edm;
@@ -210,6 +213,22 @@ namespace Microsoft.AspNetCore.OData.Query
                 throw Error.NotSupported(SRResources.ApplyToOnUntypedQueryOption, "ApplyTo");
             }
 
+            // HORRIBLE HACK FIX FOR RE-LINQ BUG
+            // TOOD: Remove this when there is a newer version of re-linq (currently 2.0.2)
+            // that can cope with these queries
+            // See: https://www.re-motion.org/jira/browse/RMLNQ-100?jql=project%20%3D%20RMLNQ%20AND%20resolution%20%3D%20Unresolved%20AND%20fixVersion%20%3D%203.0.0%20ORDER%20BY%20priority%20DESC
+            var expandedNavigationSelectItems = SelectExpandClause.SelectedItems.OfType<ExpandedNavigationSelectItem>()
+                .ToList();
+            if (expandedNavigationSelectItems.Any(s => s.FilterOption != null))
+            {
+                settings.HandleNullPropagation = HandleNullPropagationOption.True;
+                foreach (var expand in expandedNavigationSelectItems)
+                {
+                    queryable = Expand(queryable, Context.ElementClrType, expand.NavigationSource.Name);
+                }
+                queryable = Enumerate(queryable, Context.ElementClrType);
+            }
+
             // Ensure we have decided how to handle null propagation
             ODataQuerySettings updatedSettings = settings;
             if (settings.HandleNullPropagation == HandleNullPropagationOption.Default)
@@ -217,10 +236,42 @@ namespace Microsoft.AspNetCore.OData.Query
                 updatedSettings = new ODataQuerySettings(updatedSettings);
                 updatedSettings.HandleNullPropagation = HandleNullPropagationOptionHelper.GetDefaultHandleNullPropagationOption(queryable);
             }
-
             return SelectExpandBinder.Bind(queryable, updatedSettings, assembliesResolver, this);
         }
 
+
+        private MethodInfo _enumerateAsTypeMethod;
+        private IQueryable Enumerate(IQueryable queryable, Type elementType)
+        {
+            _enumerateAsTypeMethod = _enumerateAsTypeMethod ?? typeof(SelectExpandQueryOption).GetMethod(nameof(EnumerateCast), BindingFlags.Static | BindingFlags.NonPublic);
+            return (IQueryable)_enumerateAsTypeMethod.MakeGenericMethod(elementType).Invoke(null, new[] { queryable });
+        }
+
+        private static IQueryable EnumerateCast<T>(IQueryable queryable)
+        {
+            return queryable.Cast<T>().ToList().AsQueryable();
+        }
+        private MethodInfo _expandAsTypeMethod;
+        private IQueryable Expand(IQueryable queryable, Type elementType, string property)
+        {
+            _expandAsTypeMethod = _enumerateAsTypeMethod ?? typeof(SelectExpandQueryOption).GetMethod(nameof(ExpandCast), BindingFlags.Static | BindingFlags.NonPublic);
+            return (IQueryable)_expandAsTypeMethod.MakeGenericMethod(elementType, elementType.GetProperty(property).PropertyType).Invoke(null, new object[] { queryable, property });
+        }
+
+        private static IQueryable ExpandCast<T, TProperty>(IQueryable queryable, string property)
+            where T : class
+        {
+            return queryable.Cast<T>().Include(CreateExpression<T,TProperty>(property));
+        }
+
+        static Expression<Func<TModel, TProperty>> CreateExpression<TModel, TProperty>(
+            string propertyName)
+        {
+            var param = Expression.Parameter(typeof(TModel), "_");
+            return Expression.Lambda<Func<TModel, TProperty>>(
+                Expression.PropertyOrField(param, propertyName), param);
+        }
+        
         ///// <summary>
         ///// Applies the $select and $expand query options to the given entity using the given <see cref="ODataQuerySettings"/>.
         ///// </summary>
@@ -232,14 +283,14 @@ namespace Microsoft.AspNetCore.OData.Query
         //    return ApplyTo(entity, settings, AssembliesResolver);
         //}
 
-		/// <summary>
-		/// Applies the $select and $expand query options to the given entity using the given <see cref="ODataQuerySettings"/>.
-		/// </summary>
-		/// <param name="entity">The original entity.</param>
-		/// <param name="settings">The <see cref="ODataQuerySettings"/> that contains all the query application related settings.</param>
-		/// <param name="assembliesResolver">The name of the assembly to use.</param>
-		/// <returns>The new entity after the $select and $expand query has been applied to.</returns>
-		public object ApplyTo(object entity, ODataQuerySettings settings, AssembliesResolver assembliesResolver)
+        /// <summary>
+        /// Applies the $select and $expand query options to the given entity using the given <see cref="ODataQuerySettings"/>.
+        /// </summary>
+        /// <param name="entity">The original entity.</param>
+        /// <param name="settings">The <see cref="ODataQuerySettings"/> that contains all the query application related settings.</param>
+        /// <param name="assembliesResolver">The name of the assembly to use.</param>
+        /// <returns>The new entity after the $select and $expand query has been applied to.</returns>
+        public object ApplyTo(object entity, ODataQuerySettings settings, AssembliesResolver assembliesResolver)
         {
             if (entity == null)
             {

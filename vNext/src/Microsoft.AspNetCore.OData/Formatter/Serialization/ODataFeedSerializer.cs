@@ -3,7 +3,9 @@
 
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.Diagnostics.Contracts;
+using System.Linq;
 using System.Runtime.Serialization;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.OData.Builder;
@@ -98,7 +100,8 @@ namespace Microsoft.AspNetCore.OData.Formatter.Serialization
             Contract.Assert(feedType != null);
 
             IEdmEntityTypeReference elementType = GetEntityType(feedType);
-            ODataFeed feed = await CreateODataFeedAsync(enumerable, feedType.AsCollection(), writeContext);
+            var feedInstance = enumerable as IList<object> ?? enumerable.Cast<object>().ToList();
+            ODataFeed feed = await CreateODataFeedAsync(feedInstance, feedType.AsCollection(), writeContext);
             if (feed == null)
             {
                 throw new SerializationException(Error.Format(SRResources.CannotSerializerNull, Feed));
@@ -117,7 +120,7 @@ namespace Microsoft.AspNetCore.OData.Formatter.Serialization
 
             writer.WriteStart(feed);
 
-            foreach (object entry in enumerable)
+            foreach (var entry in feedInstance)
             {
                 if (entry == null)
                 {

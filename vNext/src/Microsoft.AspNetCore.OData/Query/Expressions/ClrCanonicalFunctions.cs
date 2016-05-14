@@ -18,6 +18,8 @@ namespace Microsoft.AspNetCore.OData.Query.Expressions
         private static Enum _defaultEnum = default(Enum);
 
         // function names
+        // See docs: http://docs.oasis-open.org/odata/odata/v4.0/errata02/os/complete/part2-url-conventions/odata-v4.0-errata02-os-part2-url-conventions-complete.html#_Toc406398117
+        // See docs: https://docs.google.com/viewer?url=https://www.oasis-open.org/committees/download.php/48216/odata-core-v1.0-wd01-part1-protocol-2013-2-11-MP.docx
         internal const string StartswithFunctionName = "startswith";
         internal const string EndswithFunctionName = "endswith";
         internal const string ContainsFunctionName = "contains";

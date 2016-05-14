@@ -1,3 +1,4 @@
-﻿    "Microsoft.AspNetCore.Hosting": "1.0.0-*",
-    "Microsoft.AspNetCore.StaticFiles": "1.0.0-*",
-    "Microsoft.Extensions.Logging.Console": "1.0.0-*",
+﻿                //var firstOrDefault = typeof(Queryable).GetMethods(BindingFlags.Static | BindingFlags.Public)
+                //    .Single(m => m.Name == nameof(Queryable.FirstOrDefault) &&
+                //    m.GetParameters().Length == 1);
+                //var f = firstOrDefault.MakeGenericMethod(property.PropertyType.GetGenericArguments().First()).Invoke(null, new[] {property.GetValue(service)});

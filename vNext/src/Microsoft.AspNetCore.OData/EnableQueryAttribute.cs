@@ -39,7 +39,11 @@ namespace Microsoft.AspNetCore.OData
         public EnableQueryAttribute()
         {
             _validationSettings = new ODataValidationSettings();
-            _querySettings = new ODataQuerySettings();
+            _querySettings = 
+                new ODataQuerySettings
+                {
+                    SearchDerivedTypeWhenAutoExpand = true
+                };
         }
 
         /// <summary>
@@ -366,6 +370,13 @@ namespace Microsoft.AspNetCore.OData
             {
                 throw Error.ArgumentNull("queryOptions");
             }
+            // TODO: If we are using SQL, set this to false
+            // otherwise if it is entities in code then
+            // set it to true
+            _querySettings.HandleNullPropagation =
+                //HandleNullPropagationOption.True
+                HandleNullPropagationOptionHelper.GetDefaultHandleNullPropagationOption(entity);
+                    //PageSize = actionDescriptor.PageSize(),
 
             return queryOptions.ApplyTo(entity, _querySettings);
         }
@@ -461,6 +472,7 @@ namespace Microsoft.AspNetCore.OData
                 );
 
             var queryOptions = new ODataQueryOptions(queryContext, request, assembliesResolver);
+            _querySettings.PageSize = _querySettings.PageSize ?? actionDescriptor.PageSize();
 
             ValidateQuery(request, queryOptions);
 
@@ -487,7 +499,8 @@ namespace Microsoft.AspNetCore.OData
             else
             {
                 // response is a collection.
-                IQueryable queryable = (enumerable as IQueryable) ?? enumerable.AsQueryable();
+                var entries = enumerable as object[] ?? enumerable.Cast<object>().ToArray();
+                IQueryable queryable = (enumerable as IQueryable) ?? entries.AsQueryable();
                 return ApplyQuery(queryable, queryOptions);
             }
 

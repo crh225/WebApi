@@ -46,17 +46,17 @@ namespace Microsoft.AspNetCore.OData.Query.Expressions
             _model = _context.Model;
             _modelID = ModelContainer.GetModelID(_model);
             _settings = settings;
-			_assembliesResolver = assembliesResolver;
+            _assembliesResolver = assembliesResolver;
         }
 
         public static IQueryable Bind(IQueryable queryable, ODataQuerySettings settings,
-			AssembliesResolver assembliesResolver, SelectExpandQueryOption selectExpandQuery)
+            AssembliesResolver assembliesResolver, SelectExpandQueryOption selectExpandQuery)
         {
             Contract.Assert(queryable != null);
 
             SelectExpandBinder binder = new SelectExpandBinder(settings, assembliesResolver, selectExpandQuery);
-	        var bound = binder.Bind(queryable);
-	        return bound;
+            var bound = binder.Bind(queryable);
+            return bound;
         }
 
         public static object Bind(object entity, ODataQuerySettings settings, AssembliesResolver assembliesResolver,
@@ -81,21 +81,13 @@ namespace Microsoft.AspNetCore.OData.Query.Expressions
         private IQueryable Bind(IQueryable queryable)
         {
             Type elementType = _selectExpandQuery.Context.ElementClrType;
-
             LambdaExpression projectionLambda = GetProjectionLambda();
-
-			//typeof(EntityFrameworkQueryableExtensions).GetMethod().Include()
-			MethodInfo selectMethod = ExpressionHelperMethods.QueryableSelectGeneric.MakeGenericMethod(elementType, projectionLambda.Body.Type);
-	        var result = Temp(queryable, selectMethod, projectionLambda);
-	        return result;
+            MethodInfo selectMethod = ExpressionHelperMethods.QueryableSelectGeneric.MakeGenericMethod(elementType, projectionLambda.Body.Type);
+            var result = selectMethod.Invoke(null, new object[] { queryable, projectionLambda }) as IQueryable;
+            return result;
         }
 
-	    private static IQueryable Temp(IQueryable queryable, MethodInfo selectMethod, LambdaExpression projectionLambda)
-	    {
-		    return selectMethod.Invoke(null, new object[] {queryable, projectionLambda}) as IQueryable;
-	    }
-
-	    private LambdaExpression GetProjectionLambda()
+        private LambdaExpression GetProjectionLambda()
         {
             Type elementType = _selectExpandQuery.Context.ElementClrType;
             IEdmNavigationSource navigationSource = _selectExpandQuery.Context.NavigationSource;
@@ -303,7 +295,7 @@ namespace Microsoft.AspNetCore.OData.Query.Expressions
             // source => new Wrapper { Container =  new PropertyContainer { .... } }
             if (selectExpandClause != null)
             {
-				Dictionary<IEdmNavigationProperty, ExpandedNavigationSelectItem> propertiesToExpand = GetPropertiesToExpandInQuery(selectExpandClause);
+                Dictionary<IEdmNavigationProperty, ExpandedNavigationSelectItem> propertiesToExpand = GetPropertiesToExpandInQuery(selectExpandClause);
                 ISet<IEdmStructuralProperty> autoSelectedProperties;
 
                 ISet<IEdmStructuralProperty> propertiesToInclude = GetPropertiesToIncludeInQuery(selectExpandClause, entityType, entitySet, _model, out autoSelectedProperties);
@@ -498,7 +490,7 @@ namespace Microsoft.AspNetCore.OData.Query.Expressions
                 source = AddOrderByQueryForSource(source, expandedItem.OrderByOption, elementType);
             }
 
-            if (_settings.PageSize.HasValue || 
+            if (_settings.PageSize.HasValue ||
                 (expandedItem != null && (expandedItem.TopOption.HasValue || expandedItem.SkipOption.HasValue)))
             {
                 // nested paging. Need to apply order by first, and take one more than page size as we need to know

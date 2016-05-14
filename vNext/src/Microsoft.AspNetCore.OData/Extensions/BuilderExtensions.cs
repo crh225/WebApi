@@ -59,7 +59,10 @@ namespace Microsoft.AspNetCore.OData.Extensions
 			services.AddOData();
 			var type = typeof(TODataService);
 			var assemblyNames = new AssembliesResolver(type.GetTypeInfo().Assembly);
-			var model = DefaultODataModelProvider.BuildEdmModel(type, assemblyNames, after);
+			var model = DefaultODataModelProvider.BuildEdmModel(
+                type, 
+                assemblyNames, 
+                after);
 		    services.AddSingleton(model);
 		    services.AddSingleton(assemblyNames);
 			return services;
