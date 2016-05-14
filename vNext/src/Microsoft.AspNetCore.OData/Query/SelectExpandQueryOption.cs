@@ -38,8 +38,8 @@ namespace Microsoft.AspNetCore.OData.Query
         /// <param name="expand">The $expand query parameter value.</param>
         /// <param name="context">The <see cref="ODataQueryContext"/> which contains the <see cref="IEdmModel"/> and some type information.</param>
         /// <param name="queryOptionParser">The <see cref="ODataQueryOptionParser"/> which is used to parse the query option.</param>
-        public SelectExpandQueryOption(string select, string expand, ODataQueryContext context,
-            ODataQueryOptionParser queryOptionParser)
+        /// <param name="oDataQueryOptions"></param>
+        public SelectExpandQueryOption(string @select, string expand, ODataQueryContext context, ODataQueryOptionParser queryOptionParser, ODataQueryOptions oDataQueryOptions)
         {
             if (context == null)
             {
@@ -63,6 +63,7 @@ namespace Microsoft.AspNetCore.OData.Query
             }
 
             Context = context;
+            ODataQueryOptions = oDataQueryOptions;
             RawSelect = select;
             RawExpand = expand;
             Validator = new SelectExpandQueryValidator();
@@ -73,14 +74,16 @@ namespace Microsoft.AspNetCore.OData.Query
             string select,
             string expand,
             ODataQueryContext context,
-            SelectExpandClause selectExpandClause)
-            : this(select, expand, context)
+            SelectExpandClause selectExpandClause,
+            ODataQueryOptions oDataQueryOptions)
+            : this(select, expand, context, oDataQueryOptions)
         {
             _selectExpandClause = selectExpandClause;
         }
 
         // This constructor is intended for unit testing only.
-        internal SelectExpandQueryOption(string select, string expand, ODataQueryContext context)
+        internal SelectExpandQueryOption(string select, string expand, ODataQueryContext context,
+            ODataQueryOptions oDataQueryOptions)
         {
             if (context == null)
             {
@@ -99,6 +102,7 @@ namespace Microsoft.AspNetCore.OData.Query
             }
 
             Context = context;
+            ODataQueryOptions = oDataQueryOptions;
             RawSelect = select;
             RawExpand = expand;
             Validator = new SelectExpandQueryValidator();
@@ -113,6 +117,8 @@ namespace Microsoft.AspNetCore.OData.Query
         ///  Gets the given <see cref="ODataQueryContext"/>.
         /// </summary>
         public ODataQueryContext Context { get; private set; }
+
+        public ODataQueryOptions ODataQueryOptions { get; set; }
 
         /// <summary>
         /// Gets the raw $select value.
@@ -219,7 +225,9 @@ namespace Microsoft.AspNetCore.OData.Query
             // See: https://www.re-motion.org/jira/browse/RMLNQ-100?jql=project%20%3D%20RMLNQ%20AND%20resolution%20%3D%20Unresolved%20AND%20fixVersion%20%3D%203.0.0%20ORDER%20BY%20priority%20DESC
             var expandedNavigationSelectItems = SelectExpandClause.SelectedItems.OfType<ExpandedNavigationSelectItem>()
                 .ToList();
-            if (expandedNavigationSelectItems.Any(s => s.FilterOption != null))
+            if (expandedNavigationSelectItems.Any(
+                //s => s.FilterOption != null
+                ))
             {
                 settings.HandleNullPropagation = HandleNullPropagationOption.True;
                 foreach (var expand in expandedNavigationSelectItems)

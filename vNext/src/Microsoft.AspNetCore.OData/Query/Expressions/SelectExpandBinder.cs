@@ -9,10 +9,12 @@ using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.OData.Common;
 using Microsoft.AspNetCore.OData.Extensions;
 using Microsoft.AspNetCore.OData.Formatter;
 using Microsoft.AspNetCore.OData.Formatter.Serialization;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.OData.Core;
 using Microsoft.OData.Core.UriParser.Semantic;
 using Microsoft.OData.Edm;
@@ -31,7 +33,9 @@ namespace Microsoft.AspNetCore.OData.Query.Expressions
         private AssembliesResolver _assembliesResolver;
         private string _modelID;
 
-        public SelectExpandBinder(ODataQuerySettings settings, AssembliesResolver assembliesResolver,
+        public SelectExpandBinder(
+            ODataQuerySettings settings,
+            AssembliesResolver assembliesResolver,
             SelectExpandQueryOption selectExpandQuery)
         {
             Contract.Assert(settings != null);
@@ -49,8 +53,11 @@ namespace Microsoft.AspNetCore.OData.Query.Expressions
             _assembliesResolver = assembliesResolver;
         }
 
-        public static IQueryable Bind(IQueryable queryable, ODataQuerySettings settings,
-            AssembliesResolver assembliesResolver, SelectExpandQueryOption selectExpandQuery)
+        public static IQueryable Bind(
+            IQueryable queryable, 
+            ODataQuerySettings settings,
+            AssembliesResolver assembliesResolver,
+            SelectExpandQueryOption selectExpandQuery)
         {
             Contract.Assert(queryable != null);
 
@@ -161,8 +168,11 @@ namespace Microsoft.AspNetCore.OData.Query.Expressions
             return CreatePropertyValueExpressionWithFilter(elementType, property, source, filterClause: null);
         }
 
-        internal Expression CreatePropertyValueExpressionWithFilter(IEdmEntityType elementType, IEdmProperty property,
-            Expression source, FilterClause filterClause)
+        internal Expression CreatePropertyValueExpressionWithFilter(
+            IEdmEntityType elementType, 
+            IEdmProperty property,
+            Expression source, 
+            FilterClause filterClause)
         {
             Contract.Assert(elementType != null);
             Contract.Assert(property != null);
@@ -189,47 +199,74 @@ namespace Microsoft.AspNetCore.OData.Query.Expressions
             Type nullablePropertyType = propertyValue.Type.ToNullable();
             Expression nullablePropertyValue = ExpressionHelpers.ToNullable(propertyValue);
 
-            if (filterClause != null && property.Type.IsCollection())
+            IEdmTypeReference edmElementType = property.Type.AsCollection().ElementType();
+            Type clrElementType = EdmLibHelpers.GetClrType(edmElementType, _model, _assembliesResolver);
+            if (clrElementType == null)
             {
-                IEdmTypeReference edmElementType = property.Type.AsCollection().ElementType();
-                Type clrElementType = EdmLibHelpers.GetClrType(edmElementType, _model, _assembliesResolver);
-                if (clrElementType == null)
-                {
-                    throw new ODataException(Error.Format(SRResources.MappingDoesNotContainEntityType,
-                        edmElementType.FullName()));
-                }
+                throw new ODataException(Error.Format(SRResources.MappingDoesNotContainEntityType,
+                    edmElementType.FullName()));
+            }
 
-                Expression filterSource =
+            var interceptorType = typeof(IODataQueryInterceptor<>).MakeGenericType(clrElementType);
+            var interceptors = this._selectExpandQuery
+                .ODataQueryOptions
+                .Request
+                .HttpContext
+                .RequestServices
+                .GetServices(interceptorType)
+                .ToList();
+            Expression filterSource = null;
+            if ((filterClause != null || interceptors.Any()) && property.Type.IsCollection())
+            {
+                filterSource =
                     typeof(IEnumerable).IsAssignableFrom(source.Type.GetProperty(propertyName).PropertyType)
                         ? Expression.Call(
                             ExpressionHelperMethods.QueryableAsQueryable.MakeGenericMethod(clrElementType),
                             nullablePropertyValue)
                         : nullablePropertyValue;
+            }
+            // TODO: Fix possibly ambiguity resolution if the
+            // implementation class has multiple methods names
+            // "Intercept"
+            var interceptMethod = 
+                interceptorType
+                .GetMethod(nameof(IODataQueryInterceptor<string>.Intercept))
+                ;
+            foreach (var interceptor in interceptors)
+            {
+                var predicate = (Expression)interceptMethod.Invoke(interceptor, new object[]
+                {
+                    _settings,
+                    _selectExpandQuery.ODataQueryOptions
+                });
+                ApplyFilterToQuery(
+                    clrElementType,
+                    filterSource,
+                    predicate,
+                    ref nullablePropertyType,
+                    ref nullablePropertyValue);
+                //filterSource = Expression.Call(
+                //    ExpressionHelperMethods.QueryableWhereGeneric.MakeGenericMethod(clrElementType),
+                //    filterSource,
+                //    predicate
+                //    );
+            }
 
-                Expression filterPredicate = FilterBinder.Bind(
+            if (filterClause != null && property.Type.IsCollection())
+            {
+                var filterPredicate = FilterBinder.Bind(
                     filterClause,
                     clrElementType,
                     _model,
                     _assembliesResolver,
                     _settings);
-                MethodCallExpression filterResult = Expression.Call(
-                    ExpressionHelperMethods.QueryableWhereGeneric.MakeGenericMethod(clrElementType),
-                    filterSource,
-                    filterPredicate);
 
-                nullablePropertyType = filterResult.Type;
-                if (_settings.HandleNullPropagation == HandleNullPropagationOption.True)
-                {
-                    // nullablePropertyValue == null ? null : filterResult
-                    nullablePropertyValue = Expression.Condition(
-                        test: Expression.Equal(nullablePropertyValue, Expression.Constant(value: null)),
-                        ifTrue: Expression.Constant(value: null, type: nullablePropertyType),
-                        ifFalse: filterResult);
-                }
-                else
-                {
-                    nullablePropertyValue = filterResult;
-                }
+                ApplyFilterToQuery(
+                    clrElementType, 
+                    filterSource, 
+                    filterPredicate, 
+                    ref nullablePropertyType, 
+                    ref nullablePropertyValue);
             }
 
             if (_settings.HandleNullPropagation == HandleNullPropagationOption.True)
@@ -247,6 +284,29 @@ namespace Microsoft.AspNetCore.OData.Query.Expressions
             }
 
             return propertyValue;
+        }
+
+        private void ApplyFilterToQuery(Type clrElementType, Expression filterSource, Expression filterPredicate,
+            ref Type nullablePropertyType, ref Expression nullablePropertyValue)
+        {
+            MethodCallExpression filterResult = Expression.Call(
+                ExpressionHelperMethods.QueryableWhereGeneric.MakeGenericMethod(clrElementType),
+                filterSource,
+                filterPredicate);
+
+            nullablePropertyType = filterResult.Type;
+            if (_settings.HandleNullPropagation == HandleNullPropagationOption.True)
+            {
+                // nullablePropertyValue == null ? null : filterResult
+                nullablePropertyValue = Expression.Condition(
+                    test: Expression.Equal(nullablePropertyValue, Expression.Constant(value: null)),
+                    ifTrue: Expression.Constant(value: null, type: nullablePropertyType),
+                    ifFalse: filterResult);
+            }
+            else
+            {
+                nullablePropertyValue = filterResult;
+            }
         }
 
         // Generates the expression

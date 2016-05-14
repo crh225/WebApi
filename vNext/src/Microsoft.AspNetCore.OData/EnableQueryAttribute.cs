@@ -6,6 +6,7 @@ using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Reflection;
 using System.Web.Http;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Extensions;
@@ -39,7 +40,7 @@ namespace Microsoft.AspNetCore.OData
         public EnableQueryAttribute()
         {
             _validationSettings = new ODataValidationSettings();
-            _querySettings = 
+            _querySettings =
                 new ODataQuerySettings
                 {
                     SearchDerivedTypeWhenAutoExpand = true
@@ -355,14 +356,15 @@ namespace Microsoft.AspNetCore.OData
         /// <summary>
         /// Applies the query to the given entity based on incoming query from uri and query settings.
         /// </summary>
-        /// <param name="entity">The original entity from the response message.</param>
+        /// <param name="query">The original entity from the response message.</param>
         /// <param name="queryOptions">
         /// The <see cref="ODataQueryOptions"/> instance constructed based on the incoming request.
         /// </param>
         /// <returns>The new entity after the $select and $expand query has been applied to.</returns>
-        public virtual IQueryable ApplyQuery(IQueryable entity, ODataQueryOptions queryOptions)
+        public virtual IQueryable ApplyQuery(IQueryable query, ODataQueryOptions queryOptions,
+            bool shouldApplyQuery)
         {
-            if (entity == null)
+            if (query == null)
             {
                 throw Error.ArgumentNull("entity");
             }
@@ -370,15 +372,55 @@ namespace Microsoft.AspNetCore.OData
             {
                 throw Error.ArgumentNull("queryOptions");
             }
-            // TODO: If we are using SQL, set this to false
-            // otherwise if it is entities in code then
-            // set it to true
-            _querySettings.HandleNullPropagation =
-                //HandleNullPropagationOption.True
-                HandleNullPropagationOptionHelper.GetDefaultHandleNullPropagationOption(entity);
-                    //PageSize = actionDescriptor.PageSize(),
+            query = (IQueryable)InvokeInterceptors(query, queryOptions.Context.ElementClrType, queryOptions);
+            if (shouldApplyQuery)
+            {
+                // TODO: If we are using SQL, set this to false
+                // otherwise if it is entities in code then
+                // set it to true
+                _querySettings.HandleNullPropagation =
+                    //HandleNullPropagationOption.True
+                    HandleNullPropagationOptionHelper.GetDefaultHandleNullPropagationOption(query);
+                //PageSize = actionDescriptor.PageSize(),
 
-            return queryOptions.ApplyTo(entity, _querySettings);
+                query = queryOptions.ApplyTo(query, _querySettings);
+            }
+            return query;
+        }
+
+        private object InvokeInterceptors(object query, Type elementClrType, ODataQueryOptions queryOptions)
+        {
+            return ApplyInterceptors(query, elementClrType, queryOptions.Request, _querySettings, queryOptions);
+        }
+
+        internal static object ApplyInterceptors(
+            object query,
+            Type elementClrType,
+            HttpRequest request,
+            ODataQuerySettings querySettings,
+            ODataQueryOptions queryOptions = null
+            )
+        {
+            return typeof(EnableQueryAttribute)
+                .GetMethods(BindingFlags.Static | BindingFlags.NonPublic)
+                .Single(m => m.Name == nameof(ApplyInterceptors) && m.GetGenericArguments().Any())
+                .MakeGenericMethod(elementClrType)
+                .Invoke(null, new object[] { query, request, querySettings, queryOptions });
+        }
+
+        internal static IQueryable<T> ApplyInterceptors<T>(
+            IQueryable<T> query,
+            HttpRequest request,
+            ODataQuerySettings querySettings,
+            ODataQueryOptions queryOptions
+            )
+        {
+            var interceptors = queryOptions.Request.HttpContext.RequestServices.GetServices<IODataQueryInterceptor<T>>();
+            foreach (var interceptor in interceptors)
+            {
+                query = query.Where(interceptor.Intercept(querySettings, queryOptions));
+            }
+            return query;
         }
 
         /// <summary>
@@ -389,18 +431,24 @@ namespace Microsoft.AspNetCore.OData
         /// The <see cref="ODataQueryOptions"/> instance constructed based on the incoming request.
         /// </param>
         /// <returns>The new entity after the $select and $expand query has been applied to.</returns>
-        public virtual object ApplyQuery(object entity, ODataQueryOptions queryOptions)
+        public virtual object ApplyQueryObject(object query, ODataQueryOptions queryOptions, bool shouldApplyQuery)
         {
-            if (entity == null)
+            if (query == null)
             {
-                throw Error.ArgumentNull("entity");
+                throw Error.ArgumentNull("query");
             }
             if (queryOptions == null)
             {
                 throw Error.ArgumentNull("queryOptions");
             }
 
-            return queryOptions.ApplyTo(entity, _querySettings);
+            query = (IQueryable)InvokeInterceptors(query, queryOptions.Context.ElementClrType, queryOptions);
+
+            if (shouldApplyQuery)
+            {
+                query = queryOptions.ApplyTo(query, _querySettings);
+            }
+            return query;
         }
 
         public override void OnActionExecuted(ActionExecutedContext context)
@@ -433,13 +481,13 @@ namespace Microsoft.AspNetCore.OData
                 result.Value is SingleResult ||
                 ODataCountMediaTypeMapping.IsCountRequest(request) ||
                 ContainsAutoExpandProperty(result.Value, request, context.ActionDescriptor));
-
-            if (shouldApplyQuery)
+            if (result.Value != null)
             {
-                if (result.Value != null)
-                {
-                    result.Value = ApplyQueryOptions(result.Value, request, context.ActionDescriptor);
-                }
+                result.Value = ApplyQueryOptions(
+                    result.Value,
+                    request,
+                    context.ActionDescriptor,
+                    shouldApplyQuery);
             }
             //if (ShouldBeSingleEntity(request.ODataProperties().Path.PathTemplate))
             //{
@@ -451,7 +499,7 @@ namespace Microsoft.AspNetCore.OData
             //}
         }
 
-        public virtual object ApplyQueryOptions(object value, HttpRequest request, ActionDescriptor actionDescriptor)
+        public virtual object ApplyQueryOptions(object value, HttpRequest request, ActionDescriptor actionDescriptor, bool shouldApplyQuery)
         {
             var elementClrType = value is IEnumerable
                 ? TypeHelper.GetImplementedIEnumerableType(value.GetType())
@@ -486,13 +534,13 @@ namespace Microsoft.AspNetCore.OData
                 if (singleResult == null)
                 {
                     // response is a single entity.
-                    return ApplyQuery(entity: value, queryOptions: queryOptions);
+                    return ApplyQueryObject(value, queryOptions, shouldApplyQuery);
                 }
                 else
                 {
                     // response is a composable SingleResult. ApplyQuery and call SingleOrDefault.
                     IQueryable queryable = singleResult.Queryable;
-                    queryable = ApplyQuery(queryable, queryOptions);
+                    queryable = ApplyQuery(queryable, queryOptions, shouldApplyQuery);
                     return SingleOrDefault(queryable, actionDescriptor);
                 }
             }
@@ -500,8 +548,9 @@ namespace Microsoft.AspNetCore.OData
             {
                 // response is a collection.
                 var entries = enumerable as object[] ?? enumerable.Cast<object>().ToArray();
-                IQueryable queryable = (enumerable as IQueryable) ?? entries.AsQueryable();
-                return ApplyQuery(queryable, queryOptions);
+                var queryable = enumerable as IQueryable ?? entries.AsQueryable();
+                queryable = ApplyQuery(queryable, queryOptions, shouldApplyQuery);
+                return queryable;
             }
 
             // response is a collection.
