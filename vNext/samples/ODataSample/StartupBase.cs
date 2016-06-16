@@ -128,7 +128,7 @@ namespace ODataSample.Web
                 }
             });
 
-            app.UseIISPlatformHandler();
+            //app.UseIISPlatformHandler();
 
             app.UseIdentity();
 

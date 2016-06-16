@@ -7,11 +7,11 @@ namespace ODataSample.Web.Models
 {
 	public class ProductBase : DbObject
 	{
-		public int ProductId { get; set; }
-	}
-	public class Product : ProductBase
+        public int ProductId { get; set; }
+    }
+    public class Product : ProductBase
 	{
-		public Customer Customer { get; set; }
+        public Customer Customer { get; set; }
 		public int? CustomerId { get; set; }
 		public string CreatedByUserId { get; set; }
 		public ApplicationUser CreatedByUser { get; set; }

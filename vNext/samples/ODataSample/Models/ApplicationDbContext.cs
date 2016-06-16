@@ -39,9 +39,14 @@ namespace ODataSample.Web.Models
 				;
 			builder
 				.Entity<Product>()
+                .HasKey(p => p.ProductId)
+                ;
+            builder
+				.Entity<Product>()
 				.HasOne(u => u.CreatedByUser)
-				.WithMany(u => u.ProductsCreated);
-			builder
+				.WithMany(u => u.ProductsCreated)
+                ;
+            builder
 				.Entity<Product>()
 				.HasOne(u => u.LastModifiedByUser)
 				.WithMany(u => u.ProductsLastModified);

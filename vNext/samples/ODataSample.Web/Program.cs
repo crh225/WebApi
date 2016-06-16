@@ -1,22 +1,24 @@
-﻿using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Razor.TagHelpers;
-using Microsoft.Extensions.Configuration;
+﻿using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Threading.Tasks;
+using Microsoft.AspNetCore.Hosting;
 
-namespace ODataSample.Web
+namespace ODataSample.Web2
 {
-	public static class Program
-	{
-		public static void Main(string[] args)
-		{
-			var config = new ConfigurationBuilder()
-				.AddEnvironmentVariables(prefix: "ASPNETCORE_")
-				.Build();
+    public class Program
+    {
+        public static void Main(string[] args)
+        {
+            var host = new WebHostBuilder()
+                .UseKestrel()
+                .UseContentRoot(Directory.GetCurrentDirectory())
+                .UseIISIntegration()
+                .UseStartup<Startup>()
+                .Build();
 
-			StartupBase.Init<Startup>(
-				host => host
-				.UseConfiguration(config)
-				.UseIISPlatformHandlerUrl()
-				.UseKestrel());
-		}
-	}
+            host.Run();
+        }
+    }
 }

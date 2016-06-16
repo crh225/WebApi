@@ -30,14 +30,15 @@ namespace ODataSample.Web
             builder.EntityType<ApplicationUser>()
                 .RemoveAllProperties()
                 //.AddProperty(p => p.Roles)
+                .AddProperty(p => p.Id)
                 .AddProperty(p => p.UserName)
                 .AddProperty(p => p.Email)
                 .AddProperty(p => p.FavouriteProductId)
                 .AddProperty(p => p.FavouriteProduct)
                 ;
-            builder
-                .EntityType<Order>()
-                .HasKey(o => o.Id);
+            //builder
+            //    .EntityType<Order>()
+            //    .HasKey(o => o.Id);
             builder
                 .EntityType<Customer>()
                 .Property(p => p.CustomerId)
@@ -47,8 +48,8 @@ namespace ODataSample.Web
                 ;
             //builder.EntityType<Product>()
             //	.HasKey(p => p.ProductId);
-            builder.EntityType<ApplicationUser>()
-                .HasKey(p => p.Id);
+            //builder.EntityType<ApplicationUser>()
+            //    .HasKey(p => p.Id);
             builder
                 .Function("HelloWorld")
                 .Returns<string>();

@@ -2,13 +2,6 @@
   "version": "1.0.0-*",
   "description": "ODataSample.Web.Migrations Console Application",
   "authors": [ "Josh Comley" ],
-  "tags": [ "" ],
-  "projectUrl": "",
-  "licenseUrl": "",
-
-  "compilationOptions": {
-    "emitEntryPoint": true
-  },
 
   "dependencies": {
     "Brandless.EntityFrameworkCore.Migrations": "1.0.0-rc2-*",

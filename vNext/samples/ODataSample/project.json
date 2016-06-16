@@ -6,17 +6,16 @@
   "projectUrl": "",
   "licenseUrl": "",
   "dependencies": {
-    "Microsoft.AspNetCore.Mvc": "1.0.0-rc2-20774",
-    "Microsoft.AspNetCore.Mvc.Core": "1.0.0-rc2-20774",
-    "Microsoft.AspNetCore.Diagnostics": "1.0.0-rc2-20774",
-    "Microsoft.AspNetCore.IISPlatformHandler": "1.0.0-rc2-20587",
-    "Microsoft.EntityFrameworkCore.SqlServer": "1.0.0-rc2-20774",
-    "Microsoft.AspNetCore.Server.Kestrel": "1.0.0-rc2-20774",
-    "Microsoft.AspNetCore.Identity.EntityFrameworkCore": "1.0.0-rc2-20774",
-    "Microsoft.AspNetCore.StaticFiles": "1.0.0-rc2-20774",
+    "Microsoft.AspNetCore.Mvc": "1.0.0-rc2-final",
+    "Microsoft.AspNetCore.Mvc.Core": "1.0.0-rc2-final",
+    "Microsoft.AspNetCore.Diagnostics": "1.0.0-rc2-final",
+    "Microsoft.EntityFrameworkCore.SqlServer": "1.0.0-rc2-final",
+    "Microsoft.AspNetCore.Server.Kestrel": "1.0.0-rc2-final",
+    "Microsoft.AspNetCore.Identity.EntityFrameworkCore": "1.0.0-rc2-final",
+    "Microsoft.AspNetCore.StaticFiles": "1.0.0-rc2-final",
     "Microsoft.AspNetCore.OData": "1.0.0.25",
-    "Microsoft.Extensions.Configuration.Json": "1.0.0-rc2-20774",
-    "Microsoft.Extensions.Configuration.EnvironmentVariables": "1.0.0-rc2-20774"
+    "Microsoft.Extensions.Configuration.Json": "1.0.0-rc2-final",
+    "Microsoft.Extensions.Configuration.EnvironmentVariables": "1.0.0-rc2-final"
   },
 
   "frameworks": {
