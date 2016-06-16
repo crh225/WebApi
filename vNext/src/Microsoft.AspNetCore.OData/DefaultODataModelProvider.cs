@@ -2,6 +2,8 @@
 using System.Reflection;
 using Microsoft.AspNetCore.OData.Builder;
 using Microsoft.AspNetCore.OData.Common;
+using Microsoft.AspNetCore.OData.Extensions;
+using Microsoft.AspNetCore.OData.Reflection;
 using Microsoft.OData.Edm;
 
 namespace Microsoft.AspNetCore.OData
@@ -15,7 +17,7 @@ namespace Microsoft.AspNetCore.OData
                 Namespace = apiContextType.Namespace
             };
             
-            var publicProperties = apiContextType.GetProperties(BindingFlags.Public | BindingFlags.Instance);
+            var publicProperties = apiContextType.GetPropertiesInternal(BindingFlagsInternal.Public | BindingFlagsInternal.Instance);
             foreach (var property in publicProperties)
             {
                 var entityClrType = TypeHelper.GetImplementedIEnumerableType(property.PropertyType);

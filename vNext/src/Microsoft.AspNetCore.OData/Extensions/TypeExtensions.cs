@@ -4,11 +4,70 @@ using System.Globalization;
 using System.Reflection;
 using Microsoft.AspNetCore.OData.Common;
 using System.Linq;
+using Microsoft.AspNetCore.OData.Reflection;
 
 namespace Microsoft.AspNetCore.OData.Extensions
 {
     public static class TypeExtensions
     {
+        internal static MethodInfo GetMethodInternal(this Type type, string name, Type[] types)
+        {
+            var method = type.GetRuntimeMethod(name, types);
+            return method;
+        }
+        internal static MethodInfo GetMethodInternal(this Type type, string name, BindingFlagsInternal flags)
+        {
+            var method = type.GetRuntimeMethods().SingleOrDefault(m => m.Name == name &&
+                (type.GetTypeInfo().IsInterface || m.MatchesFlags(flags)));
+            return method;
+        }
+
+        internal static MethodInfo[] GetMethodsInternal(this Type type, BindingFlagsInternal flags)
+        {
+            var methods = type.GetRuntimeMethods().Where(m =>
+                type.GetTypeInfo().IsInterface || m.MatchesFlags(flags)).ToArray();
+            return methods;
+        }
+
+        internal static PropertyInfo[] GetPropertiesInternal(this Type type, BindingFlagsInternal flags)
+        {
+            var properties = type.GetRuntimeProperties().Where(m =>
+                type.GetTypeInfo().IsInterface || m.GetMethod.MatchesFlags(flags)).ToArray();
+            return properties;
+        }
+
+        private static bool MatchesFlags(this MethodBase member, BindingFlagsInternal flags)
+        {
+            if ((flags & BindingFlagsInternal.Instance) == BindingFlagsInternal.Instance)
+            {
+                if (!member.IsStatic)
+                {
+                    return true;
+                }
+            }
+            if ((flags & BindingFlagsInternal.NonPublic) == BindingFlagsInternal.NonPublic)
+            {
+                if (!member.IsPublic)
+                {
+                    return true;
+                }
+            }
+            if ((flags & BindingFlagsInternal.Public) == BindingFlagsInternal.Public)
+            {
+                if (member.IsPublic)
+                {
+                    return true;
+                }
+            }
+            if ((flags & BindingFlagsInternal.Static) == BindingFlagsInternal.Static)
+            {
+                if (member.IsStatic)
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
         public static string EdmFullName(this Type clrType)
         {
             return String.Format(CultureInfo.InvariantCulture, "{0}.{1}", clrType.Namespace, clrType.Name);
@@ -77,44 +136,44 @@ namespace Microsoft.AspNetCore.OData.Extensions
             return false;
         }
 
-        public static TypeCode GetTypeCode(this Type type)
+        internal static TypeCodeInternal GetTypeCode(this Type type)
         {
             if (type == null)
-                return TypeCode.Empty;
+                return TypeCodeInternal.Empty;
             else if (type == typeof(bool))
-                return TypeCode.Boolean;
+                return TypeCodeInternal.Boolean;
             else if (type == typeof(char))
-                return TypeCode.Char;
+                return TypeCodeInternal.Char;
             else if (type == typeof(sbyte))
-                return TypeCode.SByte;
+                return TypeCodeInternal.SByte;
             else if (type == typeof(byte))
-                return TypeCode.Byte;
+                return TypeCodeInternal.Byte;
             else if (type == typeof(short))
-                return TypeCode.Int16;
+                return TypeCodeInternal.Int16;
             else if (type == typeof(ushort))
-                return TypeCode.UInt16;
+                return TypeCodeInternal.UInt16;
             else if (type == typeof(int))
-                return TypeCode.Int32;
+                return TypeCodeInternal.Int32;
             else if (type == typeof(uint))
-                return TypeCode.UInt32;
+                return TypeCodeInternal.UInt32;
             else if (type == typeof(long))
-                return TypeCode.Int64;
+                return TypeCodeInternal.Int64;
             else if (type == typeof(ulong))
-                return TypeCode.UInt64;
+                return TypeCodeInternal.UInt64;
             else if (type == typeof(float))
-                return TypeCode.Single;
+                return TypeCodeInternal.Single;
             else if (type == typeof(double))
-                return TypeCode.Double;
+                return TypeCodeInternal.Double;
             else if (type == typeof(decimal))
-                return TypeCode.Decimal;
+                return TypeCodeInternal.Decimal;
             else if (type == typeof(System.DateTime))
-                return TypeCode.DateTime;
+                return TypeCodeInternal.DateTime;
             else if (type == typeof(string))
-                return TypeCode.String;
+                return TypeCodeInternal.String;
             else if (type.GetTypeInfo().IsEnum)
                 return GetTypeCode(Enum.GetUnderlyingType(type));
             else
-                return TypeCode.Object;
+                return TypeCodeInternal.Object;
         }
     }
 }

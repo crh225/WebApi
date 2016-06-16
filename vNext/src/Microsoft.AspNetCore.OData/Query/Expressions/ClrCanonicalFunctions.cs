@@ -9,6 +9,8 @@ using System.Linq.Expressions;
 using System.Reflection;
 using Microsoft.OData.Edm.Library;
 using System.Linq;
+using Microsoft.AspNetCore.OData.Extensions;
+using Microsoft.AspNetCore.OData.Reflection;
 
 namespace Microsoft.AspNetCore.OData.Query.Expressions
 {
@@ -127,10 +129,10 @@ namespace Microsoft.AspNetCore.OData.Query.Expressions
 
         // PropertyInfo and MethodInfo of DateTime & DateTimeOffset related.
         public static readonly PropertyInfo DateTimeKindPropertyInfo = typeof(DateTime).GetProperty("Kind");
-        public static readonly MethodInfo ToUniversalTimeDateTime = typeof(DateTime).GetMethod("ToUniversalTime", BindingFlags.Instance | BindingFlags.Public);
-        public static readonly MethodInfo ToUniversalTimeDateTimeOffset = typeof(DateTimeOffset).GetMethod("ToUniversalTime", BindingFlags.Instance | BindingFlags.Public);
-        public static readonly MethodInfo ToOffsetFunction = typeof(DateTimeOffset).GetMethod("ToOffset", BindingFlags.Instance | BindingFlags.Public);
-        public static readonly MethodInfo GetUtcOffset = typeof(TimeZoneInfo).GetMethod("GetUtcOffset", new[] { typeof(DateTime) });
+        public static readonly MethodInfo ToUniversalTimeDateTime = typeof(DateTime).GetMethodInternal("ToUniversalTime", BindingFlagsInternal.Instance | BindingFlagsInternal.Public);
+        public static readonly MethodInfo ToUniversalTimeDateTimeOffset = typeof(DateTimeOffset).GetMethodInternal("ToUniversalTime", BindingFlagsInternal.Instance | BindingFlagsInternal.Public);
+        public static readonly MethodInfo ToOffsetFunction = typeof(DateTimeOffset).GetMethodInternal("ToOffset", BindingFlagsInternal.Instance | BindingFlagsInternal.Public);
+        public static readonly MethodInfo GetUtcOffset = typeof(TimeZoneInfo).GetMethodInternal("GetUtcOffset", new[] { typeof(DateTime) });
 
         [SuppressMessage("Microsoft.Performance", "CA1810:InitializeReferenceTypeStaticFieldsInline", Justification = "Initialization is order dependent")]
         static ClrCanonicalFunctions()

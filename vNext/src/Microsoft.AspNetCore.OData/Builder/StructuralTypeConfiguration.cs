@@ -10,6 +10,7 @@ using Microsoft.OData.Edm;
 using System.Linq;
 using Microsoft.AspNetCore.OData.Extensions;
 using Microsoft.AspNetCore.OData.Formatter;
+using Microsoft.AspNetCore.OData.Reflection;
 using Newtonsoft.Json.Serialization;
 
 namespace Microsoft.AspNetCore.OData.Builder
@@ -454,7 +455,7 @@ namespace Microsoft.AspNetCore.OData.Builder
 	    /// </summary>
 	    public virtual void RemoveAllProperties()
 	    {
-		    foreach (var property in ClrType.GetProperties(BindingFlags.Public | BindingFlags.Instance))
+		    foreach (var property in ClrType.GetPropertiesInternal(BindingFlagsInternal.Public | BindingFlagsInternal.Instance))
 		    {
 			    RemoveProperty(property);
 		    }

@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using System.Xml.Linq;
 using Microsoft.AspNetCore.OData.Common;
 using Microsoft.AspNetCore.OData.Extensions;
+using Microsoft.AspNetCore.OData.Reflection;
 using Microsoft.OData.Core;
 using Microsoft.OData.Edm;
 
@@ -131,19 +132,19 @@ namespace Microsoft.AspNetCore.OData.Formatter.Serialization
 				// Note that type cannot be a nullable type as value is not null and it is boxed.
 				switch (type.GetTypeCode())
 				{
-					case TypeCode.Char:
+					case TypeCodeInternal.Char:
 						return new String((char)value, 1);
 
-					case TypeCode.UInt16:
+					case TypeCodeInternal.UInt16:
 						return (int)(ushort)value;
 
-					case TypeCode.UInt32:
+					case TypeCodeInternal.UInt32:
 						return (long)(uint)value;
 
-					case TypeCode.UInt64:
+					case TypeCodeInternal.UInt64:
 						return checked((long)(ulong)value);
 
-					case TypeCode.DateTime:
+					case TypeCodeInternal.DateTime:
 						DateTime dateTime = (DateTime)value;
 						TimeZoneInfo timeZone = TimeZoneInfoHelper.TimeZone;
 						if (dateTime.Kind == DateTimeKind.Utc || dateTime.Kind == DateTimeKind.Local)
@@ -179,17 +180,17 @@ namespace Microsoft.AspNetCore.OData.Formatter.Serialization
 		{
 			Contract.Assert(value != null);
 
-			TypeCode typeCode = value.GetType().GetTypeCode();
+			TypeCodeInternal typeCode = value.GetType().GetTypeCode();
 
 			switch (typeCode)
 			{
 				// The type for a Boolean, Int32 or String can always be inferred in JSON.
-				case TypeCode.Boolean:
-				case TypeCode.Int32:
-				case TypeCode.String:
+				case TypeCodeInternal.Boolean:
+				case TypeCodeInternal.Int32:
+				case TypeCodeInternal.String:
 					return true;
 				// The type for a Double can be inferred in JSON ...
-				case TypeCode.Double:
+				case TypeCodeInternal.Double:
 					double doubleValue = (double)value;
 					// ... except for NaN or Infinity (positive or negative).
 					if (Double.IsNaN(doubleValue) || Double.IsInfinity(doubleValue))

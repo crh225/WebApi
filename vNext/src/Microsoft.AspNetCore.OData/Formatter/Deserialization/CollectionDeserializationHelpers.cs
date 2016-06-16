@@ -9,6 +9,7 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime.Serialization;
 using Microsoft.AspNetCore.OData.Common;
+using Microsoft.AspNetCore.OData.Extensions;
 using Microsoft.AspNetCore.OData.Properties;
 using Microsoft.OData.Edm;
 
@@ -35,7 +36,7 @@ namespace Microsoft.AspNetCore.OData.Formatter.Deserialization
 
             if (list == null)
             {
-                addMethod = collection.GetType().GetMethod("Add", new Type[] { elementType });
+                addMethod = collection.GetType().GetMethodInternal("Add", new Type[] { elementType });
                 if (addMethod == null)
                 {
                     string message = Error.Format(SRResources.CollectionShouldHaveAddMethod, propertyType.FullName, propertyName, resourceType.FullName);
@@ -63,7 +64,7 @@ namespace Microsoft.AspNetCore.OData.Formatter.Deserialization
 
             if (list == null)
             {
-                addMethod = collection.GetType().GetMethod("Add", new Type[] { elementType });
+                addMethod = collection.GetType().GetMethodInternal("Add", new Type[] { elementType });
                 if (addMethod == null)
                 {
                     string message = Error.Format(SRResources.CollectionParameterShouldHaveAddMethod, paramType, paramName);
@@ -105,7 +106,7 @@ namespace Microsoft.AspNetCore.OData.Formatter.Deserialization
         {
             Contract.Assert(collection != null);
 
-            MethodInfo clearMethod = collection.GetType().GetMethod("Clear", _emptyTypeArray);
+            MethodInfo clearMethod = collection.GetType().GetMethodInternal("Clear", _emptyTypeArray);
             if (clearMethod == null)
             {
                 string message = Error.Format(SRResources.CollectionShouldHaveClearMethod, collection.GetType().FullName,
@@ -154,7 +155,7 @@ namespace Microsoft.AspNetCore.OData.Formatter.Deserialization
                 return true;
             }
 
-            if (collectionType.GetConstructor(Type.EmptyTypes) != null && !collectionType.GetTypeInfo().IsAbstract)
+            if (collectionType.GetConstructor(new Type[] {}) != null && !collectionType.GetTypeInfo().IsAbstract)
             {
                 instance = Activator.CreateInstance(collectionType) as IEnumerable;
                 return true;

@@ -48,8 +48,10 @@ namespace Microsoft.AspNetCore.OData.Builder.Conventions
 
         private static PropertyConfiguration GetKeyProperty(EntityTypeConfiguration entityType)
         {
+            var properties = entityType
+                .Properties;
             IEnumerable<PropertyConfiguration> keys =
-                entityType.Properties
+                properties
                 .Where(p => (p.Name.Equals(entityType.Name + "Id", StringComparison.OrdinalIgnoreCase) || p.Name.Equals("Id", StringComparison.OrdinalIgnoreCase))
                 && (EdmLibHelpers.GetEdmPrimitiveTypeOrNull(p.PropertyInfo.PropertyType) != null || TypeHelper.IsEnum(p.PropertyInfo.PropertyType)));
 

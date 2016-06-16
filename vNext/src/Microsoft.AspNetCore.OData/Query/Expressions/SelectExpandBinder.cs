@@ -260,7 +260,7 @@ namespace Microsoft.AspNetCore.OData.Query.Expressions
                 }
                 else
                 {
-                    //var compile = predicate.GetType().GetMethods(BindingFlags.Instance | BindingFlags.Public)
+                    //var compile = predicate.GetType().GetMethods(BindingFlagsInternal.Instance | BindingFlagsInternal.Public)
                     //    .First(m => m.Name == nameof(Expression<Func<string, bool>>.Compile) &&
                     //                !m.GetParameters().Any());
                     //Expression<Func<string, bool>> x;

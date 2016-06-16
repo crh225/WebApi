@@ -8,9 +8,11 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using Microsoft.AspNetCore.OData.Common;
+using Microsoft.AspNetCore.OData.Extensions;
 using Microsoft.AspNetCore.OData.Formatter;
 using Microsoft.AspNetCore.OData.Query.Expressions;
 using Microsoft.AspNetCore.OData.Query.Validators;
+using Microsoft.AspNetCore.OData.Reflection;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OData.Core.UriParser;
 using Microsoft.OData.Core.UriParser.Semantic;
@@ -252,7 +254,7 @@ namespace Microsoft.AspNetCore.OData.Query
         private MethodInfo _enumerateAsTypeMethod;
         private IQueryable Enumerate(IQueryable queryable, Type elementType)
         {
-            _enumerateAsTypeMethod = _enumerateAsTypeMethod ?? typeof(SelectExpandQueryOption).GetMethod(nameof(EnumerateCast), BindingFlags.Static | BindingFlags.NonPublic);
+            _enumerateAsTypeMethod = _enumerateAsTypeMethod ?? typeof(SelectExpandQueryOption).GetMethodInternal(nameof(EnumerateCast), BindingFlagsInternal.Static | BindingFlagsInternal.NonPublic);
             return (IQueryable)_enumerateAsTypeMethod.MakeGenericMethod(elementType).Invoke(null, new[] { queryable });
         }
 
@@ -263,7 +265,7 @@ namespace Microsoft.AspNetCore.OData.Query
         private MethodInfo _expandAsTypeMethod;
         private IQueryable Expand(IQueryable queryable, Type elementType, string property)
         {
-            _expandAsTypeMethod = _enumerateAsTypeMethod ?? typeof(SelectExpandQueryOption).GetMethod(nameof(ExpandCast), BindingFlags.Static | BindingFlags.NonPublic);
+            _expandAsTypeMethod = _enumerateAsTypeMethod ?? typeof(SelectExpandQueryOption).GetMethodInternal(nameof(ExpandCast), BindingFlagsInternal.Static | BindingFlagsInternal.NonPublic);
             return (IQueryable)_expandAsTypeMethod.MakeGenericMethod(elementType, elementType.GetProperty(property).PropertyType).Invoke(null, new object[] { queryable, property });
         }
 

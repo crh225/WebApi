@@ -16,7 +16,10 @@ namespace Microsoft.AspNetCore.OData.Routing
     /// </summary>
     internal static class KeyValueParser
     {
-        private static readonly Regex _stringLiteralRegex = new Regex(@"^'([^']|'')*'$", RegexOptions.Compiled);
+        private static readonly Regex _stringLiteralRegex = new Regex(@"^'([^']|'')*'$"
+// netstandardapp limit
+//, RegexOptions.Compiled
+            );
 
         // TODO 1656: Make this method support more format in OData Uri BNF
         public static Dictionary<string, string> ParseKeys(string segment)
@@ -139,7 +142,7 @@ namespace Microsoft.AspNetCore.OData.Routing
             }
             else
             {
-                int singleQuoteCount = value.Count(c => c == '\'');
+                int singleQuoteCount = value.ToCharArray().Count(c => c == '\'');
 
                 if (singleQuoteCount != 0 && singleQuoteCount != 2)
                 {

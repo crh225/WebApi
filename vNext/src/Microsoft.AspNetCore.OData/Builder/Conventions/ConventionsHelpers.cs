@@ -11,6 +11,7 @@ using Microsoft.AspNetCore.OData.Common;
 using Microsoft.AspNetCore.OData.Extensions;
 using Microsoft.AspNetCore.OData.Formatter;
 using Microsoft.AspNetCore.OData.Formatter.Serialization;
+using Microsoft.AspNetCore.OData.Reflection;
 using Microsoft.OData.Core;
 using Microsoft.OData.Core.UriParser;
 using Microsoft.OData.Edm;
@@ -63,10 +64,10 @@ namespace Microsoft.AspNetCore.OData.Builder.Conventions
 				throw Error.ArgumentNull("type");
 			}
 
-			return type
+            return type
 				.ClrType
 				//.Properties
-				.GetProperties(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)
+				.GetPropertiesInternal(BindingFlagsInternal.Public | BindingFlagsInternal.NonPublic | BindingFlagsInternal.Instance)
 				.Where(p =>
 					p.IsValidStructuralProperty() &&
 					type.IgnoredProperties().All(p1 => p1.Name != p.Name)

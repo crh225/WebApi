@@ -5,6 +5,8 @@ using System.Reflection;
 using Microsoft.OData.Edm;
 using Newtonsoft.Json;
 using System.Linq;
+using Microsoft.AspNetCore.OData.Extensions;
+using Microsoft.AspNetCore.OData.Reflection;
 
 namespace Microsoft.AspNetCore.OData.Formatter
 {
@@ -111,7 +113,7 @@ namespace Microsoft.AspNetCore.OData.Formatter
 
         private PropertyInfo[] GetPublicProperties(Type type)
         {
-            return type.GetProperties(BindingFlags.Public | BindingFlags.Instance);
+            return type.GetPropertiesInternal(BindingFlagsInternal.Public | BindingFlagsInternal.Instance);
         }
 
         private PropertyInfo GetPublicProperty(Type type, string name)

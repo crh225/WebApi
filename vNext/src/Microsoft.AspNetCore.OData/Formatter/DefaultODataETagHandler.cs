@@ -80,7 +80,7 @@ namespace Microsoft.AspNetCore.OData.Formatter
 
                 // base64 decode
                 byte[] bytes = Convert.FromBase64String(rawValue);
-                string valueString = Encoding.UTF8.GetString(bytes);
+                string valueString = Encoding.UTF8.GetString(bytes, 0, bytes.Length);
                 object obj = ODataUriUtils.ConvertFromUriLiteral(valueString, ODataVersion.V4);
                 if (obj is ODataNullValue)
                 {

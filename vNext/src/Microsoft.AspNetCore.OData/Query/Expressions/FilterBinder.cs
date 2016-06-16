@@ -9,13 +9,11 @@ using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
-using System.Runtime.CompilerServices;
 using System.Xml.Linq;
-using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.AspNetCore.OData.Common;
 using Microsoft.AspNetCore.OData.Extensions;
 using Microsoft.AspNetCore.OData.Formatter;
-using Microsoft.AspNetCore.OData.Properties;
+using Microsoft.AspNetCore.OData.Reflection;
 using Microsoft.OData.Core;
 using Microsoft.OData.Core.UriParser.Semantic;
 using Microsoft.OData.Core.UriParser.TreeNodeKinds;
@@ -35,7 +33,7 @@ namespace Microsoft.AspNetCore.OData.Query.Expressions
 
         private static readonly string _dictionaryStringObjectIndexerName = typeof(Dictionary<string, object>).GetDefaultMembers()[0].Name;
 
-        private static readonly MethodInfo _stringCompareMethodInfo = typeof(string).GetMethod("Compare", new[] { typeof(string), typeof(string), typeof(StringComparison) });
+        private static readonly MethodInfo _stringCompareMethodInfo = typeof(string).GetMethodInternal("Compare", new[] { typeof(string), typeof(string), typeof(StringComparison) });
 
         private static readonly Expression _nullConstant = Expression.Constant(null);
         private static readonly Expression _falseConstant = Expression.Constant(false);
@@ -138,8 +136,10 @@ namespace Microsoft.AspNetCore.OData.Query.Expressions
         private Expression Bind(QueryNode node)
         {
             // Recursion guard to avoid stack overflows
+            // NetStandardApp limitation
+#if net451
             RuntimeHelpers.EnsureSufficientExecutionStack();
-
+#endif
             CollectionNode collectionNode = node as CollectionNode;
             SingleValueNode singleValueNode = node as SingleValueNode;
 
@@ -1418,21 +1418,21 @@ namespace Microsoft.AspNetCore.OData.Query.Expressions
                 {
                     switch (sourceType.GetTypeCode())
                     {
-                        case TypeCode.UInt16:
-                        case TypeCode.UInt32:
-                        case TypeCode.UInt64:
+                        case TypeCodeInternal.UInt16:
+                        case TypeCodeInternal.UInt32:
+                        case TypeCodeInternal.UInt64:
                             convertedExpression = Expression.Convert(ExtractValueFromNullableExpression(source), conversionType);
                             break;
 
-                        case TypeCode.Char:
+                        case TypeCodeInternal.Char:
                             convertedExpression = Expression.Call(ExtractValueFromNullableExpression(source), "ToString", typeArguments: null, arguments: null);
                             break;
 
-                        case TypeCode.DateTime:
+                        case TypeCodeInternal.DateTime:
                             convertedExpression = source;
                             break;
 
-                        case TypeCode.Object:
+                        case TypeCodeInternal.Object:
                             if (sourceType == typeof(char[]))
                             {
                                 convertedExpression = Expression.New(typeof(string).GetConstructor(new[] { typeof(char[]) }), source);

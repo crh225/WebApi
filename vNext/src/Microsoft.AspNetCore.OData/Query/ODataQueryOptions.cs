@@ -449,7 +449,8 @@ namespace Microsoft.AspNetCore.OData.Query
             if (EdmLibHelpers.IsDynamicTypeWrapper(context.ElementClrType))
             {
                 orderByRaw = String.Join(",",
-                    context.ElementClrType.GetTypeInfo().GetProperties()
+                    context.ElementClrType.GetTypeInfo()
+                        .DeclaredProperties
                         .Where(property => EdmLibHelpers.GetEdmPrimitiveTypeOrNull(property.PropertyType) != null)
                         .Select(property => property.Name));
             }

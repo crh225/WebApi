@@ -5,13 +5,13 @@ namespace ResxGenerator
 {
     public class Program
     {
-        private readonly string[] _resxFiles = new[]
+        private static readonly string[] _resxFiles = new[]
         {
             @"..\..\src\Microsoft.AspNetCore.OData\CommonWebApiResources.resx",
             @"..\..\src\Microsoft.AspNetCore.OData\SRResources.resx"
         };
 
-        public void Main()
+        public static void Main()
         {
             foreach (var resxFile in _resxFiles)
             {

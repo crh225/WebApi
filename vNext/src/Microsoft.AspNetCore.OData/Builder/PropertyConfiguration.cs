@@ -2,15 +2,17 @@
 // Licensed under the MIT License.  See License.txt in the project root for license information.
 
 using System;
+using System.Diagnostics;
 using System.Reflection;
 using Microsoft.AspNetCore.OData.Common;
 
 namespace Microsoft.AspNetCore.OData.Builder
 {
-	/// <summary>
-	///     Base class for all property configurations.
-	/// </summary>
-	public abstract class PropertyConfiguration
+    /// <summary>
+    ///     Base class for all property configurations.
+    /// </summary>
+    [DebuggerDisplay("{Name}")]
+    public abstract class PropertyConfiguration
 	{
 		private string _name;
 

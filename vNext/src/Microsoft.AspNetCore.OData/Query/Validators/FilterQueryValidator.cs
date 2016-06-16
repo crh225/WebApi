@@ -507,8 +507,10 @@ namespace System.Web.OData.Query.Validators
         public virtual void ValidateQueryNode(QueryNode node, ODataValidationSettings settings)
         {
             // Recursion guard to avoid stack overflows
+#if net451
+            // netstandardapp limit
             RuntimeHelpers.EnsureSufficientExecutionStack();
-
+#endif
             SingleValueNode singleNode = node as SingleValueNode;
             CollectionNode collectionNode = node as CollectionNode;
 

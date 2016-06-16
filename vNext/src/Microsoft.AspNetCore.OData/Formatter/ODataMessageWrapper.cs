@@ -19,7 +19,9 @@ namespace Microsoft.AspNetCore.OData.Formatter
         private Stream _stream;
         private Dictionary<string, string> _headers;
         private IDictionary<string, string> _contentIdMapping;
-        private static readonly Regex ContentIdReferencePattern = new Regex(@"\$\d", RegexOptions.Compiled);
+        private static readonly Regex ContentIdReferencePattern = new Regex(@"\$\d"
+//, RegexOptions.Compiled
+            );
 
         public ODataMessageWrapper()
             : this(stream: null, headers: null)

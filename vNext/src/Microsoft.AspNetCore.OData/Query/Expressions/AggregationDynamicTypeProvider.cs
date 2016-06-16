@@ -113,7 +113,7 @@ namespace Microsoft.AspNetCore.OData.Query.Expressions
             // {
             //  return (propertyType)this.GetPropertyValue("propertyName");
             // }
-            MethodBuilder getPropMthdBldr = tb.DefineMethod("get_" + propertyName, MethodAttributes.Public | MethodAttributes.SpecialName | MethodAttributes.HideBySig, propertyType, Type.EmptyTypes);
+            MethodBuilder getPropMthdBldr = tb.DefineMethod("get_" + propertyName, MethodAttributes.Public | MethodAttributes.SpecialName | MethodAttributes.HideBySig, propertyType, null/*Type.EmptyTypes*/);
             ILGenerator getIl = getPropMthdBldr.GetILGenerator();
 
             getIl.Emit(OpCodes.Ldarg_0);

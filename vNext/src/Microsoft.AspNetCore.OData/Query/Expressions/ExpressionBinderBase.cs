@@ -13,6 +13,7 @@ using System.Xml.Linq;
 using Microsoft.AspNetCore.OData.Common;
 using Microsoft.AspNetCore.OData.Extensions;
 using Microsoft.AspNetCore.OData.Formatter;
+using Microsoft.AspNetCore.OData.Reflection;
 using Microsoft.OData.Core;
 using Microsoft.OData.Core.UriParser.Semantic;
 using Microsoft.OData.Core.UriParser.TreeNodeKinds;
@@ -24,7 +25,7 @@ namespace Microsoft.AspNetCore.OData.Query.Expressions
 {
     internal abstract class ExpressionBinderBase
     {
-        protected static readonly MethodInfo StringCompareMethodInfo = typeof(string).GetMethod("Compare", new[] { typeof(string), typeof(string), typeof(StringComparison) });
+        protected static readonly MethodInfo StringCompareMethodInfo = typeof(string).GetMethodInternal("Compare", new[] { typeof(string), typeof(string), typeof(StringComparison) });
 
         protected static readonly Expression NullConstant = Expression.Constant(null);
         protected static readonly Expression FalseConstant = Expression.Constant(false);
@@ -268,23 +269,23 @@ namespace Microsoft.AspNetCore.OData.Query.Expressions
                 }
                 else
                 {
-                    switch (Type.GetTypeCode(sourceType))
+                    switch (sourceType.GetTypeCode())
                     {
-                        case TypeCode.UInt16:
-                        case TypeCode.UInt32:
-                        case TypeCode.UInt64:
+                        case TypeCodeInternal.UInt16:
+                        case TypeCodeInternal.UInt32:
+                        case TypeCodeInternal.UInt64:
                             convertedExpression = Expression.Convert(ExtractValueFromNullableExpression(source), conversionType);
                             break;
 
-                        case TypeCode.Char:
+                        case TypeCodeInternal.Char:
                             convertedExpression = Expression.Call(ExtractValueFromNullableExpression(source), "ToString", typeArguments: null, arguments: null);
                             break;
 
-                        case TypeCode.DateTime:
+                        case TypeCodeInternal.DateTime:
                             convertedExpression = source;
                             break;
 
-                        case TypeCode.Object:
+                        case TypeCodeInternal.Object:
                             if (sourceType == typeof(char[]))
                             {
                                 convertedExpression = Expression.New(typeof(string).GetConstructor(new[] { typeof(char[]) }), source);
@@ -344,7 +345,7 @@ namespace Microsoft.AspNetCore.OData.Query.Expressions
         // creates an expression for the corresponding OData function.
         protected Expression MakeFunctionCall(MemberInfo member, params Expression[] arguments)
         {
-            Contract.Assert(member.MemberType == MemberTypes.Property || member.MemberType == MemberTypes.Method);
+            Contract.Assert(member is MethodInfo || member is PropertyInfo);
 
             IEnumerable<Expression> functionCallArguments = arguments;
             if (_querySettings.HandleNullPropagation == HandleNullPropagationOption.True)
@@ -359,7 +360,7 @@ namespace Microsoft.AspNetCore.OData.Query.Expressions
             functionCallArguments = ExtractValueFromNullableArguments(functionCallArguments);
 
             Expression functionCall;
-            if (member.MemberType == MemberTypes.Method)
+            if (member is MethodInfo)
             {
                 MethodInfo method = member as MethodInfo;
                 if (method.IsStatic)

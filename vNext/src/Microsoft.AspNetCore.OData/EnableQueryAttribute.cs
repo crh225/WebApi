@@ -18,6 +18,7 @@ using Microsoft.AspNetCore.OData.Common;
 using Microsoft.AspNetCore.OData.Extensions;
 using Microsoft.AspNetCore.OData.Formatter;
 using Microsoft.AspNetCore.OData.Query;
+using Microsoft.AspNetCore.OData.Reflection;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.OData.Core;
 using Microsoft.OData.Edm;
@@ -402,7 +403,7 @@ namespace Microsoft.AspNetCore.OData
             )
         {
             return typeof(EnableQueryAttribute)
-                .GetMethods(BindingFlags.Static | BindingFlags.NonPublic)
+                .GetMethodsInternal(BindingFlagsInternal.Static | BindingFlagsInternal.NonPublic)
                 .Single(m => m.Name == nameof(ApplyInterceptors) && m.GetGenericArguments().Any())
                 .MakeGenericMethod(elementClrType)
                 .Invoke(null, new object[] { query, request, querySettings, queryOptions });

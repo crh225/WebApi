@@ -8,6 +8,8 @@ using System.Diagnostics.CodeAnalysis;
 using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Reflection;
+using Microsoft.AspNetCore.OData.Extensions;
+using Microsoft.AspNetCore.OData.Reflection;
 
 namespace Microsoft.AspNetCore.OData.Common
 {
@@ -130,8 +132,8 @@ namespace Microsoft.AspNetCore.OData.Common
         // Implementation of the fast getter.
         private delegate TValue ByRefFunc<TDeclaringType, TValue>(ref TDeclaringType arg);
 
-        private static readonly MethodInfo _callPropertyGetterOpenGenericMethod = typeof(PropertyHelper).GetMethod("CallPropertyGetter", BindingFlags.NonPublic | BindingFlags.Static);
-        private static readonly MethodInfo _callPropertyGetterByReferenceOpenGenericMethod = typeof(PropertyHelper).GetMethod("CallPropertyGetterByReference", BindingFlags.NonPublic | BindingFlags.Static);
+        private static readonly MethodInfo _callPropertyGetterOpenGenericMethod = typeof(PropertyHelper).GetMethodInternal("CallPropertyGetter", BindingFlagsInternal.NonPublic | BindingFlagsInternal.Static);
+        private static readonly MethodInfo _callPropertyGetterByReferenceOpenGenericMethod = typeof(PropertyHelper).GetMethodInternal("CallPropertyGetterByReference", BindingFlagsInternal.NonPublic | BindingFlagsInternal.Static);
 
         private static object CallPropertyGetter<TDeclaringType, TValue>(Func<TDeclaringType, TValue> getter, object @this)
         {
@@ -145,7 +147,7 @@ namespace Microsoft.AspNetCore.OData.Common
         }
 
         // Implementation of the fast setter.
-        private static readonly MethodInfo _callPropertySetterOpenGenericMethod = typeof(PropertyHelper).GetMethod("CallPropertySetter", BindingFlags.NonPublic | BindingFlags.Static);
+        private static readonly MethodInfo _callPropertySetterOpenGenericMethod = typeof(PropertyHelper).GetMethodInternal("CallPropertySetter", BindingFlagsInternal.NonPublic | BindingFlagsInternal.Static);
 
         private static void CallPropertySetter<TDeclaringType, TValue>(Action<TDeclaringType, TValue> setter, object @this, object value)
         {
@@ -165,7 +167,7 @@ namespace Microsoft.AspNetCore.OData.Common
             {
                 // We avoid loading indexed properties using the where statement.
                 // Indexed properties are not useful (or valid) for grabbing properties off an anonymous object.
-                IEnumerable<PropertyInfo> properties = type.GetProperties(BindingFlags.Public | BindingFlags.Instance)
+                IEnumerable<PropertyInfo> properties = type.GetPropertiesInternal(BindingFlagsInternal.Public | BindingFlagsInternal.Instance)
                                                            .Where(prop => prop.GetIndexParameters().Length == 0 &&
                                                                           prop.GetMethod != null);
 
