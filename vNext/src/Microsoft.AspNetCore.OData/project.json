@@ -1,6 +1,6 @@
 
 {
-  "version": "1.0.0.29",
+  "version": "1.0.0.31",
   "description": "Microsoft.AspNetCore.OData",
 
   "dependencies": {
@@ -13,6 +13,19 @@
 
   "frameworks": {
     "net451": { },
+    "netcoreapp1.0": {
+      "dependencies": {
+        "Microsoft.NETCore.App": {
+          "type": "platform",
+          "version": "1.0.0-rc2-3002702"
+        },
+        "System.Reflection.Emit": "4.0.1-rc2-24027"
+      },
+      "imports": [
+        "dnxcore50",
+        "portable-net451+win8"
+      ]
+    },
     "netstandardapp1.0": {
       "dependencies": {
         "Microsoft.NETCore.App": {
