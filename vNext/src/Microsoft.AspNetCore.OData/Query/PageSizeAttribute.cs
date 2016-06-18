@@ -2,9 +2,9 @@ using System;
 
 namespace Microsoft.AspNetCore.OData.Query
 {
-	public sealed class PageSizeAttribute : Attribute
+	public class PageSizeAttribute : Attribute
 	{
-		public int Value { get; set; }
+		public virtual int? Value { get; }
 
 		public PageSizeAttribute(int value)
 		{
