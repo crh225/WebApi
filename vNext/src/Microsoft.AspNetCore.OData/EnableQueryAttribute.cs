@@ -493,6 +493,12 @@ namespace Microsoft.AspNetCore.OData
                 return;
             }
 
+            var statusCodeResult = context.Result as StatusCodeResult;
+            if (statusCodeResult != null && statusCodeResult.StatusCode != (int)HttpStatusCode.OK)
+            {
+                return;
+            }
+
             var request = context.HttpContext.Request;
 
             var result = context.Result as ObjectResult;
