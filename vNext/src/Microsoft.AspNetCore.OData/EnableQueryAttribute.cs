@@ -471,7 +471,7 @@ namespace Microsoft.AspNetCore.OData
                 throw Error.ArgumentNull("queryOptions");
             }
 
-            query = (IQueryable)InvokeInterceptors(query, queryOptions.Context.ElementClrType, queryOptions);
+            query = InvokeInterceptors(query, queryOptions.Context.ElementClrType, queryOptions);
 
             if (shouldApplyQuery)
             {
