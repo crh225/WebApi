@@ -21,7 +21,7 @@ namespace ODataSample.Web.Controllers
 			model,
 			new CrudBase<Customer, int>(sampleService as DbContext,
 				(sampleService as ApplicationDbContext).Customers,
-				customer => customer.CustomerId))
+				customer => customer.Id))
 		{
 			_sampleService = sampleService;
 		}
@@ -65,7 +65,7 @@ namespace ODataSample.Web.Controllers
 				return NotFound();
 			}
 
-			return new ObjectResult(customer.CustomerId);
+			return new ObjectResult(customer.Id);
 		}
 
 		[HttpGet("{id}/Products")]

@@ -49,7 +49,7 @@ namespace ODataSample.Web.Models
 			_ordersCrud = new CrudBase<Order, int>(
 				Context, Context.Orders, p => p.Id);
 			var customersCrud = new CrudBase<Customer, int>(
-				Context, Context.Customers, p => p.CustomerId);
+				Context, Context.Customers, p => p.Id);
 
 			//Action<string, double, int?, DateTime?, string> prod = (name, price, customerId, dateCreated, cratedByUserId) =>
 			//{

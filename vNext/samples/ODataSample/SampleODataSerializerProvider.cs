@@ -44,7 +44,7 @@ namespace ODataSample.Web
 
 		private async Task PreProcessCustomerAsync(Customer customer)
 		{
-			customer.FirstName = "We did it";
+			//customer.FirstName = "We did it";
 		}
 	}
 }

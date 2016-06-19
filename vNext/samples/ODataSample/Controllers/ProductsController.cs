@@ -1,9 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.OData;
 using Microsoft.AspNetCore.OData.Query;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OData.Edm;
@@ -69,7 +66,12 @@ namespace ODataSample.Web.Controllers
 			return GetName(id, prefix["prefix"].Value<string>());
 		}
 
-		// GET: api/Products
+	    public override async Task<IActionResult> Post(JObject value)
+	    {
+	        return Unauthorized();
+	    }
+
+	    // GET: api/Products
 		[PageSize(4)]
 		public override async Task<IQueryable<Product>> Get()
 		{

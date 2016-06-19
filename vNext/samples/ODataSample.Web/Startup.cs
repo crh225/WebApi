@@ -1,23 +1,16 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
-using System.Threading.Tasks;
+﻿using System.Reflection;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.AspNetCore.OData.Extensions;
-using Microsoft.AspNetCore.OData.Query;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using ODataSample.Web;
 using ODataSample.Web.Models;
 
-namespace ODataSample.Web2
+namespace ODataSample.Web
 {
     public class Startup
     {
@@ -75,8 +68,8 @@ namespace ODataSample.Web2
             services.AddScoped<ISampleService, ApplicationDbContext>();
             //services.ConfigureODataOutputFormatter<SampleOutputFormatter>();
             services.ConfigureODataSerializerProvider<SampleODataSerializerProvider>();
-            services.AddTransient<IODataQueryInterceptor<Product>, ProductInterceptor>();
-            services.AddTransient<IODataQueryInterceptor<Customer>, CustomerInterceptor>();
+            //services.AddTransient<IODataQueryInterceptor<Product>, ProductInterceptor>();
+            //services.AddTransient<IODataQueryInterceptor<Customer>, CustomerInterceptor>();
             services.AddOData<ISampleService>(ODataConfigurator.ConfigureODataSample);
         }
 

@@ -14,23 +14,10 @@ using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using ODataSample.Web.Models;
+using ODataSample.Web.Models.Interceptors;
 
 namespace ODataSample.Web
 {
-    public class ProductInterceptor : IODataQueryInterceptor<Product>
-    {
-        public Expression<Func<Product, bool>> Intercept(ODataQuerySettings querySettings, ODataQueryOptions queryOptions)
-        {
-            return q => q.Name.Contains("1");
-        }
-    }
-    public class CustomerInterceptor : IODataQueryInterceptor<Customer>
-    {
-        public Expression<Func<Customer, bool>> Intercept(ODataQuerySettings querySettings, ODataQueryOptions queryOptions)
-        {
-            return q => q.LastName.Contains("Lawd");
-        }
-    }
     public abstract class StartupBase
     {
         public static void Init<TStartup>(Action<IWebHostBuilder> building = null, params string[] args) where TStartup : class
@@ -99,8 +86,8 @@ namespace ODataSample.Web
             services.AddScoped<ISampleService, ApplicationDbContext>();
             //services.ConfigureODataOutputFormatter<SampleOutputFormatter>();
             services.ConfigureODataSerializerProvider<SampleODataSerializerProvider>();
-            services.AddTransient<IODataQueryInterceptor<Product>, ProductInterceptor>();
-            services.AddTransient<IODataQueryInterceptor<Customer>, CustomerInterceptor>();
+            //services.AddTransient<IODataQueryInterceptor<Product>, ProductInterceptor>();
+            //services.AddTransient<IODataQueryInterceptor<Customer>, CustomerInterceptor>();
             services.AddOData<ISampleService>(ODataConfigurator.ConfigureODataSample);
         }
 

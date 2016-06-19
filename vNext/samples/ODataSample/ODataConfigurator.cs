@@ -41,7 +41,7 @@ namespace ODataSample.Web
             //    .HasKey(o => o.Id);
             builder
                 .EntityType<Customer>()
-                .Property(p => p.CustomerId)
+                .Property(p => p.Id)
                 ;
             builder
                 .EntityType<Product>()

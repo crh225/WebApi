@@ -14,7 +14,7 @@ namespace ODataSample.Web.Models
 
 		public static Customer FindCustomer(this ISampleService service, int id)
 		{
-			return service.Customers.SingleOrDefault(p => p.CustomerId == id);
+			return service.Customers.SingleOrDefault(p => p.Id == id);
 		}
 	}
 }
