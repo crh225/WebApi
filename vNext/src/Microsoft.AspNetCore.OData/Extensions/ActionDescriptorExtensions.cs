@@ -29,7 +29,8 @@ namespace Microsoft.AspNetCore.OData.Extensions
             TValue resultingValue;
             if (dic.TryGetValue(key, out resultingValue))
                 return resultingValue;
-            dic.Add(key, valueFactory(key));
+            resultingValue = valueFactory(key);
+            dic.Add(key, resultingValue);
             return resultingValue;
         }
 

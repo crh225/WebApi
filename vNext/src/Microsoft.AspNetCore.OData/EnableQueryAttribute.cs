@@ -402,11 +402,39 @@ namespace Microsoft.AspNetCore.OData
             ODataQueryOptions queryOptions = null
             )
         {
-            return typeof(EnableQueryAttribute)
+            var queryToFilter = query;
+            var returnAsSingle = false;
+            if (!typeof(IQueryable<>).MakeGenericType(elementClrType).IsInstanceOfType(queryToFilter))
+            {
+                returnAsSingle = true;
+                queryToFilter =
+                    typeof(EnableQueryAttribute)
+                        .GetMethodsInternal(BindingFlagsInternal.Static | BindingFlagsInternal.NonPublic)
+                        .Single(m => m.Name == nameof(ToQueryable) && m.GetGenericArguments().Any())
+                        .MakeGenericMethod(elementClrType)
+                        .Invoke(null, new[] {queryToFilter});
+            }
+            var result =
+                (IQueryable)
+                typeof(EnableQueryAttribute)
                 .GetMethodsInternal(BindingFlagsInternal.Static | BindingFlagsInternal.NonPublic)
                 .Single(m => m.Name == nameof(ApplyInterceptors) && m.GetGenericArguments().Any())
                 .MakeGenericMethod(elementClrType)
-                .Invoke(null, new object[] { query, request, querySettings, queryOptions });
+                .Invoke(null, new [] { queryToFilter, request, querySettings, queryOptions });
+            if (returnAsSingle)
+            {
+                foreach (var single in result)
+                {
+                    // Return first entry
+                    return single;
+                }
+            }
+            return result;
+        }
+
+        internal static IQueryable<T> ToQueryable<T>(T entity)
+        {
+            return new[] { entity }.AsQueryable();
         }
 
         internal static IQueryable<T> ApplyInterceptors<T>(
@@ -475,9 +503,9 @@ namespace Microsoft.AspNetCore.OData
                     context.Result.GetType().FullName);
             }
 
-            bool shouldApplyQuery =
+            var shouldApplyQuery =
                 request.GetDisplayUrl() != null &&
-                (!String.IsNullOrWhiteSpace(new Uri(request.GetDisplayUrl()).Query) ||
+                (!string.IsNullOrWhiteSpace(new Uri(request.GetDisplayUrl()).Query) ||
                 _querySettings.PageSize.HasValue ||
                 result.Value is SingleResult ||
                 ODataCountMediaTypeMapping.IsCountRequest(request) ||
@@ -510,6 +538,11 @@ namespace Microsoft.AspNetCore.OData
             if (model == null)
             {
                 throw Error.InvalidOperation(SRResources.QueryGetModelMustNotReturnNull);
+            }
+
+            if (model.GetEdmType(elementClrType) == null)
+            {
+                return value;
             }
 
             var assembliesResolver = request.HttpContext.RequestServices.GetService<AssembliesResolver>();

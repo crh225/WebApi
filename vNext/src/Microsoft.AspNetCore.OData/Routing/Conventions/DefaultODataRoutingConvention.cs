@@ -142,10 +142,6 @@ namespace Microsoft.AspNetCore.OData.Routing.Conventions
 				}
 				if (c.AttributeRouteInfo != null)
 				{
-					if (c.AttributeRouteInfo.Template.Contains("HelloWorld"))
-					{
-						
-					}
 					var odataPrefix = ODataRoute.Instance.RoutePrefix;
 					var template = c.AttributeRouteInfo.Template.Trim('/');
 					if (template.StartsWith(odataPrefix))
@@ -153,7 +149,15 @@ namespace Microsoft.AspNetCore.OData.Routing.Conventions
 						template = template.Substring(odataPrefix.Length).Trim('/');
 						if (template != routeTemplate.Trim('/'))
 						{
-							return false;
+						    return false;
+						    //if (controllerName != "*")
+						    //{
+						    //    return false;
+						    //}
+						    //if (!template.EndsWith(routeTemplate))
+						    //{
+						    //    return false;
+						    //}
 						}
 					}
 					else
