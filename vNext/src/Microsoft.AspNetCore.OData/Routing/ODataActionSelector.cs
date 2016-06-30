@@ -62,8 +62,8 @@ namespace Microsoft.AspNetCore.OData.Routing
 
         public ActionDescriptor SelectBestCandidate(RouteContext context, IReadOnlyList<ActionDescriptor> candidates)
         {
-            //return _selector.SelectBestCandidate(context, candidates);
-            return _convention.SelectAction(context);
+            return _selector.SelectBestCandidate(context, candidates);
+            //return _convention.SelectAction(context);
         }
     }
 }
