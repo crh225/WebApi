@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.AspNetCore.OData.Builder;
 using Microsoft.AspNetCore.OData.Extensions;
+using Microsoft.AspNetCore.OData.Query;
 using Microsoft.OData.Edm;
 using Microsoft.OData.Edm.Library;
 using Newtonsoft.Json.Linq;
@@ -25,6 +26,7 @@ namespace ODataSample.Web.Controllers
 
 		// GET: api/Products
 		[HttpGet]
+        [PageSize(6)]
 		public virtual async Task<IQueryable<T>> Get()
 		{
 			return Crud.All();

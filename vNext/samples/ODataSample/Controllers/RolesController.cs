@@ -7,16 +7,16 @@ using ODataSample.Web.Models;
 
 namespace ODataSample.Web.Controllers
 {
-	[EnableQuery]
-	[Route("odata/Roles")]
-	public class RolesController : ODataCrudController<IdentityRole, string>
-	{
-		public RolesController(IEdmModel model, ISampleService sampleService) : base(
-			model,
-			new CrudBase<IdentityRole, string>(sampleService as DbContext, (sampleService as ApplicationDbContext).Roles,
-				entity => entity.Id)
-			)
-		{
-		}
-	}
+	//[EnableQuery]
+	//[Route("odata/Roles")]
+	//public class RolesController : ODataCrudController<IdentityRole, string>
+	//{
+	//	public RolesController(IEdmModel model, ISampleService sampleService) : base(
+	//		model,
+	//		new CrudBase<ApplicationRole, string>(sampleService as DbContext, (sampleService as ApplicationDbContext).Roles,
+	//			entity => entity.Id)
+	//		)
+	//	{
+	//	}
+	//}
 }

@@ -1,10 +1,11 @@
 ﻿using System.Linq;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using OpenIddict;
 
 namespace ODataSample.Web.Models
 {
-	public class ApplicationDbContext : IdentityDbContext<ApplicationUser, IdentityRole, string>, ISampleService
+	public class ApplicationDbContext : OpenIddictDbContext<ApplicationUser, ApplicationRole, OpenIddictApplication, OpenIddictAuthorization, OpenIddictScope, OpenIddictToken, string>, ISampleService
 	{
 		public DbSet<Product> Products { get; set; }
 		public DbSet<Customer> Customers { get; set; }

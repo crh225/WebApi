@@ -1,6 +1,7 @@
 ﻿using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.OData;
 using Microsoft.AspNetCore.OData.Query;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OData.Edm;
@@ -10,7 +11,7 @@ using ODataSample.Web.OData;
 
 namespace ODataSample.Web.Controllers
 {
-	[SecuredQuery]
+    [EnableQuery]
 	[Route("odata/Products")]
 	//[EnableCors("AllowAll")]
 	public class ProductsController : ODataCrudController<Product, int>

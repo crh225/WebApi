@@ -1,22 +1,21 @@
 {
   "version": "1.0.0-*",
-  "description": "ODataSample.Web.Migrations Console Application",
-  "authors": [ "Josh Comley" ],
+  "buildOptions": {
+    "emitEntryPoint": true
+  },
 
   "dependencies": {
-    "Brandless.EntityFrameworkCore.Migrations": "1.0.0-rc2-*",
+    "Brandless.EntityFrameworkCore.Migrations": "1.0.0-rtm-00001",
     "ODataSample": "1.0.0-*"
   },
 
-  "commands": {
-    "ODataSample.Web.Migrations": "ODataSample.Web.Migrations"
-  },
-
   "frameworks": {
-    "net451": { },
-    "netstandardapp1.5": {
+    "netcoreapp1.0": {
       "dependencies": {
-        "NETStandard.Library": "1.5.0-*"
+        "Microsoft.NETCore.App": {
+          "type": "platform",
+          "version": "1.0.0"
+        }
       },
       "imports": [
         "dnxcore50",
