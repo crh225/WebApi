@@ -28,13 +28,17 @@ namespace Microsoft.AspNetCore.OData.Extensions
 			return controller.Ok(controller.ModelState.ToODataError(errorCode, errorMessage));
 		}
 
-		public static T GetODataModel<T>(this Controller controller, JObject obj, bool isPatch)
+	    public static T GetODataModel<T>(this Controller controller, JObject obj, bool isPatch)
+	    {
+	        return (T)controller.GetODataModel(typeof(T), obj, isPatch);
+	    }
+
+	    public static object GetODataModel(this Controller controller, Type type, JObject obj, bool isPatch)
 		{
 			if (controller.ModelState.Any())
 			{
 				controller.ModelState.Clear();
 			}
-			var type = typeof(T);
 			if (isPatch)
 			{
 				// If we're patching, we only care about the properties
@@ -51,16 +55,21 @@ namespace Microsoft.AspNetCore.OData.Extensions
 					ValidateProperty(controller, obj, property);
 				}
 			}
-			var value = default(T);
+			var value = GetDefaultValue(type);
 			if (controller.ModelState.IsValid)
 			{
 				var jsonSerializer = JsonSerializer.CreateDefault();
-				value = obj.ToObject<T>(jsonSerializer);
+				value = obj.ToObject(type, jsonSerializer);
 			}
 			return value;
 		}
 
-		public static void ValidateProperty(this Controller controller, JObject obj, PropertyInfo property)
+        private static object GetDefaultValue(Type type)
+        {
+            return type.GetTypeInfo().IsValueType ? Activator.CreateInstance(type) : null;
+        }
+
+	    public static void ValidateProperty(this Controller controller, JObject obj, PropertyInfo property)
 		{
 			var modelState = controller.ModelState;
 			JToken jToken;

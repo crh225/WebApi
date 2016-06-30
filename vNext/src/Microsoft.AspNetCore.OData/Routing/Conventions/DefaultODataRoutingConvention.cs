@@ -136,7 +136,7 @@ namespace Microsoft.AspNetCore.OData.Routing.Conventions
 				{
 					return false;
 				}
-				if (actionName != null && actionName != c.Name)
+				if (actionName != null && actionName != c.ActionName)
 				{
 					return false;
 				}

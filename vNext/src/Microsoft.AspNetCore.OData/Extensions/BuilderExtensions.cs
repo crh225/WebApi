@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Reflection;
-using System.Threading;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Mvc.Formatters;
+using Microsoft.AspNetCore.Mvc.Internal;
 using Microsoft.AspNetCore.OData.Builder;
 using Microsoft.AspNetCore.OData.Formatter.Serialization;
 using Microsoft.AspNetCore.OData.Routing;
@@ -77,7 +77,8 @@ namespace Microsoft.AspNetCore.OData.Extensions
             //AssemblyProviderManager.Register(defaultAssemblyProvider);
 			var router = new ODataRoute(
 				prefix,
-				app.ApplicationServices.GetService<IEdmModel>());
+				app.ApplicationServices.GetService<IEdmModel>(),
+                app.ApplicationServices.GetService<MvcRouteHandler>());
 		    ODataRoute.Instance = router;
 			return app.UseRouter(router);
         }

@@ -8,6 +8,8 @@ using System.Text.RegularExpressions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.OData.Core;
 using System.Linq;
+using System.Net.Http.Headers;
+using Microsoft.Extensions.Primitives;
 
 namespace Microsoft.AspNetCore.OData.Formatter
 {
@@ -20,16 +22,24 @@ namespace Microsoft.AspNetCore.OData.Formatter
         private Dictionary<string, string> _headers;
         private IDictionary<string, string> _contentIdMapping;
         private static readonly Regex ContentIdReferencePattern = new Regex(@"\$\d"
-//, RegexOptions.Compiled
+            //, RegexOptions.Compiled
             );
 
         public ODataMessageWrapper()
-            : this(stream: null, headers: null)
+            : this(stream: null, headers: (IHeaderDictionary)null)
         {
         }
 
         public ODataMessageWrapper(Stream stream)
-            : this(stream: stream, headers: null)
+            : this(stream: stream, headers: (IHeaderDictionary)null)
+        {
+        }
+
+        public ODataMessageWrapper(Stream stream, HttpHeaders headers)
+            : this(
+                  stream: stream, 
+                  headers: headers?.Select(header => new KeyValuePair<string, StringValues>(header.Key, new StringValues(header.Value.ToArray()))).ToList(), 
+                  contentIdMapping: null)
         {
         }
 
@@ -38,7 +48,7 @@ namespace Microsoft.AspNetCore.OData.Formatter
         {
         }
 
-        public ODataMessageWrapper(Stream stream, IHeaderDictionary headers, IDictionary<string, string> contentIdMapping)
+        public ODataMessageWrapper(Stream stream, IEnumerable<KeyValuePair<string, StringValues>> headers, IDictionary<string, string> contentIdMapping)
         {
             _stream = stream;
             if (headers != null)

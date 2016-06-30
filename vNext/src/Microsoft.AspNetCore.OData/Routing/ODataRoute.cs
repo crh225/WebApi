@@ -17,15 +17,16 @@ namespace Microsoft.AspNetCore.OData.Routing
         private readonly IODataRoutingConvention _routingConvention;
         public readonly string RoutePrefix;
         private readonly IEdmModel _model;
-        private readonly IRouter m = new MvcRouteHandler();
+        private readonly IRouter _m;
 
 		public static ODataRoute Instance { get; internal set; }
 
-		public ODataRoute(string routePrefix, IEdmModel model)
+		public ODataRoute(string routePrefix, IEdmModel model, MvcRouteHandler mvcRouteHandler)
         {
             _routingConvention = new DefaultODataRoutingConvention();
             RoutePrefix = routePrefix;
             _model = model;
+		    _m = mvcRouteHandler;
         }
 
         public async Task RouteAsync(RouteContext context)
@@ -49,7 +50,7 @@ namespace Microsoft.AspNetCore.OData.Routing
                 context.HttpContext.ODataPathHandler().Parse(_model, "http://service-root/", remaining.ToString());
             context.HttpContext.ODataProperties().IsValidODataRequest = true;
             var ase = context.HttpContext.RequestServices.GetRequiredService<IActionSelector>();
-            await m.RouteAsync(context);
+            await _m.RouteAsync(context);
         }
 
         public VirtualPathData GetVirtualPath(VirtualPathContext context)

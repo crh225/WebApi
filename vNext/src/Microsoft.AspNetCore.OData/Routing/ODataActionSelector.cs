@@ -1,4 +1,6 @@
 ﻿using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc.Abstractions;
 using Microsoft.AspNetCore.Mvc.ActionConstraints;
@@ -22,9 +24,9 @@ namespace Microsoft.AspNetCore.OData.Routing
             IEnumerable<IActionConstraintProvider> actionConstraintProviders,
             ILoggerFactory loggerFactory)
         {
-            
-            _selector = new ActionSelector(decisionTreeProvider, 
-                new ActionConstraintCache(actionDescriptorsCollectionProvider, actionConstraintProviders), 
+
+            _selector = new ActionSelector(decisionTreeProvider,
+                new ActionConstraintCache(actionDescriptorsCollectionProvider, actionConstraintProviders),
                 loggerFactory);
             _convention = convention;
         }
@@ -41,11 +43,27 @@ namespace Microsoft.AspNetCore.OData.Routing
 
         public ActionDescriptor Select(RouteContext context)
         {
+            return SelectCandidates(context).First();
+        }
+
+        public IReadOnlyList<ActionDescriptor> SelectCandidates(RouteContext context)
+        {
             if (context.HttpContext.ODataProperties().IsValidODataRequest)
             {
-                return _convention.SelectAction(context);
+                return AsCollection(_convention.SelectAction(context));
             }
-            return _selector.Select(context);
+            return _selector.SelectCandidates(context);
+        }
+
+        private static IReadOnlyList<ActionDescriptor> AsCollection(ActionDescriptor actionDescriptor)
+        {
+            return new ReadOnlyCollection<ActionDescriptor>(new[] { actionDescriptor });
+        }
+
+        public ActionDescriptor SelectBestCandidate(RouteContext context, IReadOnlyList<ActionDescriptor> candidates)
+        {
+            //return _selector.SelectBestCandidate(context, candidates);
+            return _convention.SelectAction(context);
         }
     }
 }

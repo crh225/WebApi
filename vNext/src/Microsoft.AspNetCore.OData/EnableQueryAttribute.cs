@@ -394,7 +394,7 @@ namespace Microsoft.AspNetCore.OData
             return ApplyInterceptors(query, elementClrType, queryOptions.Request, _querySettings, queryOptions);
         }
 
-        internal static object ApplyInterceptors(
+        internal object ApplyInterceptors(
             object query,
             Type elementClrType,
             HttpRequest request,
@@ -404,22 +404,17 @@ namespace Microsoft.AspNetCore.OData
         {
             var queryToFilter = query;
             var returnAsSingle = false;
+            //var model = GetModel(elementClrType, request, null);
             if (!typeof(IQueryable<>).MakeGenericType(elementClrType).IsInstanceOfType(queryToFilter))
             {
                 returnAsSingle = true;
                 queryToFilter =
-                    typeof(EnableQueryAttribute)
-                        .GetMethodsInternal(BindingFlagsInternal.Static | BindingFlagsInternal.NonPublic)
-                        .Single(m => m.Name == nameof(ToQueryable) && m.GetGenericArguments().Any())
-                        .MakeGenericMethod(elementClrType)
+                    GetGenericMethod(nameof(ToQueryable), elementClrType)
                         .Invoke(null, new[] {queryToFilter});
             }
             var result =
                 (IQueryable)
-                typeof(EnableQueryAttribute)
-                .GetMethodsInternal(BindingFlagsInternal.Static | BindingFlagsInternal.NonPublic)
-                .Single(m => m.Name == nameof(ApplyInterceptors) && m.GetGenericArguments().Any())
-                .MakeGenericMethod(elementClrType)
+                    GetGenericMethod(nameof(ApplyInterceptors), elementClrType)
                 .Invoke(null, new [] { queryToFilter, request, querySettings, queryOptions });
             if (returnAsSingle)
             {
@@ -430,6 +425,14 @@ namespace Microsoft.AspNetCore.OData
                 }
             }
             return result;
+        }
+
+        private static MethodInfo GetGenericMethod(string name, Type elementClrType)
+        {
+            return typeof(EnableQueryAttribute)
+                .GetMethodsInternal(BindingFlagsInternal.Static | BindingFlagsInternal.NonPublic)
+                .Single(m => m.Name == name && m.GetGenericArguments().Any())
+                .MakeGenericMethod(elementClrType);
         }
 
         internal static IQueryable<T> ToQueryable<T>(T entity)
@@ -494,7 +497,7 @@ namespace Microsoft.AspNetCore.OData
             }
 
             var statusCodeResult = context.Result as StatusCodeResult;
-            if (statusCodeResult != null && statusCodeResult.StatusCode != (int)HttpStatusCode.OK)
+            if (statusCodeResult != null)
             {
                 return;
             }
@@ -565,12 +568,12 @@ namespace Microsoft.AspNetCore.OData
             ValidateQuery(request, queryOptions);
 
             var enumerable = value as IEnumerable;
-            if (enumerable == null)
+            if (enumerable == null || value is string)
             {
                 // response is not a collection; we only support $select and $expand on single entities.
                 ValidateSelectExpandOnly(queryOptions);
 
-                SingleResult singleResult = value as SingleResult;
+                var singleResult = value as SingleResult;
                 if (singleResult == null)
                 {
                     // response is a single entity.
@@ -579,7 +582,7 @@ namespace Microsoft.AspNetCore.OData
                 else
                 {
                     // response is a composable SingleResult. ApplyQuery and call SingleOrDefault.
-                    IQueryable queryable = singleResult.Queryable;
+                    var queryable = singleResult.Queryable;
                     queryable = ApplyQuery(queryable, queryOptions, shouldApplyQuery);
                     return SingleOrDefault(queryable, actionDescriptor);
                 }
@@ -590,6 +593,16 @@ namespace Microsoft.AspNetCore.OData
                 var entries = enumerable as object[] ?? enumerable.Cast<object>().ToArray();
                 var queryable = enumerable as IQueryable ?? entries.AsQueryable();
                 queryable = ApplyQuery(queryable, queryOptions, shouldApplyQuery);
+                if (ODataCountMediaTypeMapping.IsCountRequest(request))
+                {
+                    long? count = request.ODataProperties().TotalCount;
+
+                    if (count.HasValue)
+                    {
+                        // Return the count value if it is a $count request.
+                        return count.Value;
+                    }
+                }
                 return queryable;
             }
 
@@ -724,7 +737,7 @@ namespace Microsoft.AspNetCore.OData
                 throw Error.InvalidOperation(
                     SRResources.FailedToRetrieveTypeToBuildEdmModel,
                     typeof(EnableQueryAttribute).Name,
-                    actionDescriptor.Name,
+                    actionDescriptor.DisplayName,
                     "Unknown controller",
                     response.GetType().FullName);
             }
