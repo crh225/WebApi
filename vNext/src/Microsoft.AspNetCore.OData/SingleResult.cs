@@ -1,4 +1,6 @@
 using System.Linq;
+using System.Threading.Tasks;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.OData.Common;
 
 namespace Microsoft.AspNetCore.OData
@@ -8,13 +10,7 @@ namespace Microsoft.AspNetCore.OData
     public sealed class SingleResult<T> : SingleResult
     {
         /// <summary>The <see cref="T:System.Linq.IQueryable`1" /> containing zero or one entities.</summary>
-        public IQueryable<T> Queryable
-        {
-            get
-            {
-                return base.Queryable as IQueryable<T>;
-            }
-        }
+        public IQueryable<T> Queryable => base.Queryable as IQueryable<T>;
 
         /// <summary>Initializes a new instance of the <see cref="T:System.Web.Http.SingleResult`1" /> class.</summary>
         /// <param name="queryable">The <see cref="T:System.Linq.IQueryable`1" /> containing zero or one entities.</param>

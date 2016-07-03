@@ -410,12 +410,12 @@ namespace Microsoft.AspNetCore.OData
                 returnAsSingle = true;
                 queryToFilter =
                     GetGenericMethod(nameof(ToQueryable), elementClrType)
-                        .Invoke(null, new[] {queryToFilter});
+                        .Invoke(null, new[] { queryToFilter });
             }
             var result =
                 (IQueryable)
                     GetGenericMethod(nameof(ApplyInterceptors), elementClrType)
-                .Invoke(null, new [] { queryToFilter, request, querySettings, queryOptions });
+                .Invoke(null, new[] { queryToFilter, request, querySettings, queryOptions });
             if (returnAsSingle)
             {
                 foreach (var single in result)
@@ -537,11 +537,20 @@ namespace Microsoft.AspNetCore.OData
             //}
         }
 
-        public virtual object ApplyQueryOptions(object value, HttpRequest request, ActionDescriptor actionDescriptor, bool shouldApplyQuery)
+        public virtual object ApplyQueryOptions(object result, HttpRequest request, ActionDescriptor actionDescriptor, bool shouldApplyQuery)
         {
-            var elementClrType = value is IEnumerable
-                ? TypeHelper.GetImplementedIEnumerableType(value.GetType())
-                : value.GetType();
+            var query = result;
+            if (result is SingleResult)
+            {
+                query = (result as SingleResult).Queryable;
+            }
+            else if (result is ObjectResult)
+            {
+                query = (result as ObjectResult).Value;
+            }
+            var elementClrType = query is IEnumerable
+                ? TypeHelper.GetImplementedIEnumerableType(query.GetType())
+                : query.GetType();
 
             var model = request.ODataProperties().Model;
             if (model == null)
@@ -551,7 +560,7 @@ namespace Microsoft.AspNetCore.OData
 
             if (model.GetEdmType(elementClrType) == null)
             {
-                return value;
+                return result;
             }
 
             var assembliesResolver = request.HttpContext.RequestServices.GetService<AssembliesResolver>();
@@ -567,17 +576,17 @@ namespace Microsoft.AspNetCore.OData
 
             ValidateQuery(request, queryOptions);
 
-            var enumerable = value as IEnumerable;
-            if (enumerable == null || value is string)
+            var enumerable = result as IEnumerable;
+            if (enumerable == null || result is string)
             {
                 // response is not a collection; we only support $select and $expand on single entities.
                 ValidateSelectExpandOnly(queryOptions);
 
-                var singleResult = value as SingleResult;
+                var singleResult = result as SingleResult;
                 if (singleResult == null)
                 {
                     // response is a single entity.
-                    return ApplyQueryObject(value, queryOptions, shouldApplyQuery);
+                    return ApplyQueryObject(result, queryOptions, shouldApplyQuery);
                 }
                 else
                 {
