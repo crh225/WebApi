@@ -7,10 +7,12 @@ namespace ODataSample.Web.Models
 {
 	public class ApplicationDbContext : OpenIddictDbContext<ApplicationUser, ApplicationRole, OpenIddictApplication, OpenIddictAuthorization, OpenIddictScope, OpenIddictToken, string>, ISampleService
 	{
+		public DbSet<Client> Clients { get; set; }
 		public DbSet<Product> Products { get; set; }
 		public DbSet<Customer> Customers { get; set; }
 		public DbSet<Order> Orders { get; set; }
 
+		IQueryable<Client> ISampleService.Clients => Clients;
 		IQueryable<ApplicationUser> ISampleService.Users => Users;
 		//IQueryable<IdentityUserRole<string>> ISampleService.UserRoles => UserRoles;
 		//IQueryable<IdentityRole> ISampleService.Roles => Roles;

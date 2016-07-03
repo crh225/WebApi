@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.OData;
@@ -11,6 +12,17 @@ using ODataSample.Web.OData;
 
 namespace ODataSample.Web.Controllers
 {
+    [EnableQuery]
+    //[HazAuthorize(Policy2 = "Super")]
+    [Route("odata/Clients")]
+    public class ClientsController : Controller
+    {
+        [HttpGet]
+        public IQueryable<Client> Get()
+        {
+            return new Client[] { }.AsQueryable();
+        }
+    }
     [EnableQuery]
 	[Route("odata/Products")]
 	//[EnableCors("AllowAll")]

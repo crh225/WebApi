@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 14
-VisualStudioVersion = 14.0.25123.0
+VisualStudioVersion = 14.0.25420.1
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{3E55571F-8E8F-448A-ACE8-63849EE0871F}"
 EndProject
@@ -27,6 +27,10 @@ EndProject
 Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "ODataSample.Web", "samples\ODataSample.Web\ODataSample.Web.xproj", "{F2CC8F17-3FAE-47C9-913C-D0414F87901C}"
 EndProject
 Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "ResxGenerator", "tools\ResxGenerator\ResxGenerator.xproj", "{CE860193-E299-4105-ACE3-F1D01AAB399E}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "bug", "bug", "{093DA912-3F32-4FA1-8FAE-C5708C7158D2}"
+EndProject
+Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "OpenIddictODataRepro", "samples\OpenIddictODataRepro\OpenIddictODataRepro.xproj", "{BA41FBBE-B723-4337-A117-B0FDE908677D}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -58,6 +62,10 @@ Global
 		{CE860193-E299-4105-ACE3-F1D01AAB399E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{CE860193-E299-4105-ACE3-F1D01AAB399E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{CE860193-E299-4105-ACE3-F1D01AAB399E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BA41FBBE-B723-4337-A117-B0FDE908677D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BA41FBBE-B723-4337-A117-B0FDE908677D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BA41FBBE-B723-4337-A117-B0FDE908677D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BA41FBBE-B723-4337-A117-B0FDE908677D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -69,5 +77,6 @@ Global
 		{C10C8CDA-4954-417E-B8B5-3609AA8A5237} = {CDB37674-D801-412C-9B1A-2103A114D41B}
 		{F2CC8F17-3FAE-47C9-913C-D0414F87901C} = {CDB37674-D801-412C-9B1A-2103A114D41B}
 		{CE860193-E299-4105-ACE3-F1D01AAB399E} = {31922483-4CE7-4B02-88E4-EAF27D5E941B}
+		{BA41FBBE-B723-4337-A117-B0FDE908677D} = {093DA912-3F32-4FA1-8FAE-C5708C7158D2}
 	EndGlobalSection
 EndGlobal

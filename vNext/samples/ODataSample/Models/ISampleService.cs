@@ -10,6 +10,7 @@ namespace ODataSample.Web.Models
         //IQueryable<IdentityRole> Roles { get; }
         IQueryable<Order> Orders { get; }
         IQueryable<Product> Products { get; }
+        IQueryable<Client> Clients { get; }
 		IQueryable<Customer> Customers { get; }
     }
 }

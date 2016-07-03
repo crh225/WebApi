@@ -153,7 +153,7 @@ namespace ODataSample.Web.Models
 				{
 					product.Name = name;
 					product.Price = price;
-					product.CustomerId = customerId;
+					product.CustomerId = (int)customerId;
 					product.DateCreated = dateCreated ?? DateTime.UtcNow.AddDays(-ToInt(guid) % 365);
 					product.CreatedByUserId = cratedByUserId;
 					product.OwnerEmailAddress = "empty@empty.com";
