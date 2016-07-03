@@ -3,6 +3,7 @@ using System.Reflection;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
+using Microsoft.AspNetCore.OData;
 using Microsoft.AspNetCore.OData.Builder;
 using Microsoft.AspNetCore.OData.Extensions;
 using Microsoft.AspNetCore.OData.Query;
@@ -40,7 +41,7 @@ namespace ODataSample.Web.Controllers
 			{
 				return NotFound();
 			}
-			return new ObjectResult(entity);
+			return Ok(new SingleResult<T>(entity));
 		}
 
 		public virtual async Task<IActionResult> OnPost(T model)

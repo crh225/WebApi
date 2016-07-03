@@ -33,6 +33,9 @@ namespace ODataSample.Web
                 .AddProperty(p => p.Id)
                 .AddProperty(p => p.UserName)
                 .AddProperty(p => p.Email)
+                .AddProperty(p => p.ProductsCreated)
+                .AddProperty(p => p.UsedProductId)
+                .AddProperty(p => p.UsedProduct)
                 .AddProperty(p => p.FavouriteProductId)
                 .AddProperty(p => p.FavouriteProduct)
                 ;

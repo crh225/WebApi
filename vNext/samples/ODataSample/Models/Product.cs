@@ -17,7 +17,7 @@ namespace ODataSample.Web.Models
     public class Product : ProductBase
 	{
         public Customer Customer { get; set; }
-		public int CustomerId { get; set; }
+		public int? CustomerId { get; set; }
 		public string CreatedByUserId { get; set; }
 		public ApplicationUser CreatedByUser { get; set; }
 		public List<ApplicationUser> UsedByUsers { get; set; }

@@ -113,8 +113,7 @@ namespace DCodeGitForksODataWebApivNextsamples.Migrations
             migrationBuilder.AddColumn<int>(
                 name: "Id",
                 table: "Customers",
-                nullable: false,
-                defaultValue: 0)
+                nullable: false)
                 .Annotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
             migrationBuilder.AlterColumn<DateTimeOffset>(
