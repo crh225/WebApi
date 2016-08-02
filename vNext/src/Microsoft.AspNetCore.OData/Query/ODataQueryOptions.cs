@@ -58,7 +58,12 @@ namespace Microsoft.AspNetCore.OData.Query
                 context.NavigationSource,
                 queryOptionDict);
 
-            BuildQueryOptions(queryOptionDict);
+			if (context.Path.ResolverSetttings != null)
+			{
+				_queryOptionParser.Resolver = context.Path.ResolverSetttings.CreateResolver();
+			}
+
+			BuildQueryOptions(queryOptionDict);
         }
 
         /// <summary>

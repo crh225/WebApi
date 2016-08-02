@@ -28,7 +28,8 @@ namespace Microsoft.AspNetCore.OData.Builder
             // type and property conventions (ordering is important here).
             new AbstractTypeDiscoveryConvention(),
             new DataContractAttributeEdmTypeConvention(),
-            new NotMappedAttributeConvention(), // NotMappedAttributeConvention has to run before EntityKeyConvention
+            //new NotMappedAttributeConvention(), // NotMappedAttributeConvention has to run before EntityKeyConvention
+            new ODataIncludeAttributeConvention(),
             new DataMemberAttributeEdmPropertyConvention(),
             new RequiredAttributeEdmPropertyConvention(),
             new ConcurrencyCheckAttributeEdmPropertyConvention(),
@@ -593,19 +594,11 @@ namespace Microsoft.AspNetCore.OData.Builder
 
         private void MapEntityType(EntityTypeConfiguration entity)
         {
-            IEnumerable<PropertyInfo> properties = ConventionsHelpers.GetProperties(entity, includeReadOnly: _isQueryCompositionMode);
-            foreach (PropertyInfo property in properties)
+            var properties = ConventionsHelpers.GetProperties(entity, includeReadOnly: _isQueryCompositionMode);
+            foreach (var property in properties)
             {
-				// TODO: JC: Investigate moving this to newer "Ignored" pattern
-                var notMappedAttribute = property.GetCustomAttribute<NotMappedAttribute>();
-                if (notMappedAttribute != null)
-                {
-                    // Don't map this type if we have a "NotMapped" attribute
-                    continue;
-                }
 				AddPropertyInternal(entity, property);
             }
-
             MapDerivedTypes(entity);
         }
 

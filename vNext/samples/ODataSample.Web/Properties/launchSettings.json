@@ -11,7 +11,7 @@
     "IIS Express": {
       "commandName": "IISExpress",
       "launchBrowser": true,
-      "launchUrl": "odata/Users('1')",
+      "launchUrl": "odata/Users?$filter=Type eq 'User'",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
       }

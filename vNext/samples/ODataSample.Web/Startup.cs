@@ -68,6 +68,8 @@ namespace ODataSample.Web
                 .AddDefaultTokenProviders();
             services
                 .AddOpenIddict<ApplicationUser, ApplicationRole, OpenIddictApplication, OpenIddictAuthorization, OpenIddictScope, OpenIddictToken, ApplicationDbContext, string>()
+                //.AllowPasswordFlow()
+                .AllowImplicitFlow()
                 //.AddCors(c =>
                 //{
                 //    c.AllowAnyHeader();

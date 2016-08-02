@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using OpenIddict;
 
 namespace ODataSample.Web.Models
@@ -7,6 +6,7 @@ namespace ODataSample.Web.Models
 	public class ApplicationUser : OpenIddictUser<string, OpenIddictAuthorization, OpenIddictToken>
 	{
 		public int? UsedProductId { get; set; }
+		public UserType Type { get; set; }
 		public Product UsedProduct { get; set; }
 		public Product FavouriteProduct { get; set; }
 		public int? FavouriteProductId { get; set; }

@@ -21,15 +21,10 @@ namespace Microsoft.AspNetCore.OData.Routing
     /// </summary>
     public class DefaultODataPathHandler : IODataPathHandler, IODataPathTemplateHandler
     {
-        private ODataUriResolverSetttings _resolverSettings = new ODataUriResolverSetttings();
+	    internal ODataUriResolverSetttings ResolverSetttings { get; set; } 
+			= new ODataUriResolverSetttings();
 
-        internal ODataUriResolverSetttings ResolverSetttings
-        {
-            get { return _resolverSettings; }
-            set { _resolverSettings = value; }
-        }
-
-        /// <summary>
+	    /// <summary>
         /// Parses the specified OData path as an <see cref="ODataPath"/> that contains additional information about the EDM type and entity set for the path.
         /// </summary>
         /// <param name="model">The model to use for path parsing.</param>
@@ -51,7 +46,10 @@ namespace Microsoft.AspNetCore.OData.Routing
                 throw Error.ArgumentNull("odataPath");
             }
 
-            return Parse(model, serviceRoot, odataPath, ResolverSetttings, enableUriTemplateParsing: false);
+		    ResolverSetttings.UnqualifiedNameCall = true;
+		    ResolverSetttings.EnumPrefixFree = true;
+
+			return Parse(model, serviceRoot, odataPath, ResolverSetttings, enableUriTemplateParsing: false);
         }
 
         /// <summary>
@@ -209,6 +207,8 @@ namespace Microsoft.AspNetCore.OData.Routing
                 id,
                 enableUriTemplateParsing,
                 uriParser.ParameterAliasNodes);
+
+	        webAPIPath.ResolverSetttings = resolverSettings;
 
             CheckNavigableProperty(webAPIPath, model);
             return webAPIPath;

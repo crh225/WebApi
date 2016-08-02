@@ -38,6 +38,7 @@ namespace ODataSample.Web
                 .AddProperty(p => p.UsedProduct)
                 .AddProperty(p => p.FavouriteProductId)
                 .AddProperty(p => p.FavouriteProduct)
+				.AddProperty(p => p.Type)
                 ;
             //builder
             //    .EntityType<Order>()

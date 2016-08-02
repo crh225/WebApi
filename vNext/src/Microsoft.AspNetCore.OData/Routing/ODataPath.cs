@@ -22,12 +22,12 @@ namespace Microsoft.AspNetCore.OData.Routing
         private IEdmType _edmType;
         private IEdmNavigationSource _navigationSource;
         private string _pathTemplate;
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="ODataPath" /> class.
-        /// </summary>
-        /// <param name="segments">The path segments for the path.</param>
-        public ODataPath(params ODataPathSegment[] segments)
+		internal ODataUriResolverSetttings ResolverSetttings { get; set; }
+		/// <summary>
+		/// Initializes a new instance of the <see cref="ODataPath" /> class.
+		/// </summary>
+		/// <param name="segments">The path segments for the path.</param>
+		public ODataPath(params ODataPathSegment[] segments)
             : this(segments as IList<ODataPathSegment>)
         {
         }

@@ -57,10 +57,6 @@ namespace Microsoft.AspNetCore.OData.Formatter
             writer.WriteValue(GenerateIdLinkString(value));
             foreach (var property in GetPublicProperties(value.GetType()))
             {
-                if (property.GetCustomAttribute<NotMappedAttribute>() != null)
-                {
-                    continue;
-                }
                 if (IsValidStructuralPropertyType(property.PropertyType))
                 {
                     writer.WritePropertyName(property.Name);
