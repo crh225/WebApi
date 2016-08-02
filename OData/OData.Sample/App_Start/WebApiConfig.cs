@@ -19,7 +19,7 @@ namespace OData.Sample
 			builder.EntitySet<Product>("Products");
 			builder.EntitySet<Customer>("Customers");
 			builder.EntitySet<ApplicationUser>("Users");
-
+			
 			config.MapODataServiceRoute(
 				routeName: "ODataRoute",
 				routePrefix: null,
@@ -28,7 +28,8 @@ namespace OData.Sample
 														  // Configure Web API to use only bearer token authentication.
 			//config.SuppressDefaultHostAuthentication();
             //config.Filters.Add(new HostAuthenticationFilter(OAuthDefaults.AuthenticationType));
-
+			config.EnableEnumPrefixFree(true);
+			config.EnableUnqualifiedNameCall(true);
             // Web API routes
             config.MapHttpAttributeRoutes();
 
@@ -37,7 +38,8 @@ namespace OData.Sample
                 routeTemplate: "api/{controller}/{id}",
                 defaults: new { id = RouteParameter.Optional }
             );
-			Seeder.EnsureDatabase(new ApplicationDbContext());
+
+	        Seeder.EnsureDatabase(new ApplicationDbContext());
         }
     }
 }

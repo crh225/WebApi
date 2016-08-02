@@ -10,6 +10,7 @@ using Microsoft.Owin.Security.OAuth;
 using Owin;
 using OData.Sample.Providers;
 using OData.Sample.Models;
+using ODataSample.Web.Models;
 
 namespace OData.Sample
 {

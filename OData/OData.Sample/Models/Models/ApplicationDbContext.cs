@@ -26,5 +26,10 @@ namespace ODataSample.Web.Models
 		//		"Server=.;Database=Microsoft.AspNetCore.OData.App.Data;User ID=morselsLogin;Password=PPm|Wb(An!Cb1~{}&]UPxO@nf;Trusted_Connection=False;Encrypt=True;TrustServerCertificate=True;Connection Timeout=30;");
 		//	base.OnConfiguring(optionsBuilder);
 		//}
+
+		public static ApplicationDbContext Create()
+		{
+			return new ApplicationDbContext();
+		}
 	}
 }

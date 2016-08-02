@@ -256,11 +256,17 @@
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
+    <Compile Include="Migrations\201608012147475_AddCustomerType.cs" />
+    <Compile Include="Migrations\201608012147475_AddCustomerType.Designer.cs">
+      <DependentUpon>201608012147475_AddCustomerType.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\Configuration.cs" />
     <Compile Include="Models\AccountBindingModels.cs" />
     <Compile Include="Models\AccountViewModels.cs" />
     <Compile Include="Models\IdentityModels.cs" />
     <Compile Include="Models\Models\ApplicationDbContext.cs" />
     <Compile Include="Models\Models\Customer.cs" />
+    <Compile Include="Models\Models\CustomerType.cs" />
     <Compile Include="Models\Models\ISampleService.cs" />
     <Compile Include="Models\Models\Order.cs" />
     <Compile Include="Models\Models\Permissions.cs" />
@@ -351,6 +357,11 @@
       <Name>System.Web.OData</Name>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Migrations\201608012147475_AddCustomerType.resx">
+      <DependentUpon>201608012147475_AddCustomerType.cs</DependentUpon>
+    </EmbeddedResource>
+  </ItemGroup>
   <PropertyGroup>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
     <VSToolsPath Condition="'$(VSToolsPath)' == ''">$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)</VSToolsPath>
@@ -369,7 +380,7 @@
           <AutoAssignPort>True</AutoAssignPort>
           <DevelopmentServerPort>62172</DevelopmentServerPort>
           <DevelopmentServerVPath>/</DevelopmentServerVPath>
-          <IISUrl>http://localhost:62172/</IISUrl>
+          <IISUrl>http://localhost:62173/</IISUrl>
           <NTLMAuthentication>False</NTLMAuthentication>
           <UseCustomServer>False</UseCustomServer>
           <CustomServerUrl>

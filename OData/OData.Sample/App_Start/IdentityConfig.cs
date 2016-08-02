@@ -3,7 +3,8 @@ using Microsoft.AspNet.Identity;
 using Microsoft.AspNet.Identity.EntityFramework;
 using Microsoft.AspNet.Identity.Owin;
 using Microsoft.Owin;
-using OData.Sample.Models;
+using ODataSample.Web.Models;
+using ApplicationUser = OData.Sample.Models.ApplicationUser;
 
 namespace OData.Sample
 {
