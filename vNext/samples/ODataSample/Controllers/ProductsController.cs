@@ -45,6 +45,18 @@ namespace ODataSample.Web.Controllers
 			return Ok($"Hello from product {id}");
 		}
 
+
+		[HttpGet(nameof(Expanded))]
+		[EnableQuery(AllowedQueryOptions=AllowedQueryOptions.None)]
+		public async Task<IActionResult> Expanded()
+		{			
+			var orders = Crud.All()
+				.Include(c => c.Customer)
+				.ToList()
+				;
+			return Ok(orders);
+		}
+
 		// This is needed to prevent action resolution issues
 		[HttpGet("MostExpensive")]
 		public IActionResult MostExpensive()

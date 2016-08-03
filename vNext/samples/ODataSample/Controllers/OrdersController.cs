@@ -1,3 +1,4 @@
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.OData;
 using Microsoft.EntityFrameworkCore;
@@ -18,10 +19,19 @@ namespace ODataSample.Web.Controllers
 		{
 		}
 
-		[HttpGet("{id}/DuplicateMethodName")]
-		public IActionResult DuplicateMethodName(int id)
+		[HttpGet("{id}/" + nameof(DuplicateMethodName))]
+		public async Task<IActionResult> DuplicateMethodName(int id)
 		{
-			return Ok($"Hello from order {id}");
+			return Ok(await Crud.All().Include(o => o.Customer).ToListAsync());
+		}
+
+		[HttpGet(nameof(Expanded))]
+		[EnableQuery]
+		public async Task<IActionResult> Expanded()
+		{
+			var orders = Crud.All()
+				.Include(c => c.Customer);
+			return Ok(orders);
 		}
 	}
 }

@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.OData.Builder;
+using ODataSample.Web.Controllers;
 using ODataSample.Web.Models;
 
 namespace ODataSample.Web
@@ -118,12 +119,22 @@ namespace ODataSample.Web
 
             builder
                 .EntityType<Order>()
-                .Function("DuplicateMethodName")
+				.Collection
+                .Function(nameof(OrdersController.Expanded))
+                .ReturnsCollectionFromEntitySet<Order>(nameof(ISampleService.Orders));
+            builder
+                .EntityType<Product>()
+				.Collection
+                .Function(nameof(OrdersController.Expanded))
+                .ReturnsCollectionFromEntitySet<Product>(nameof(ISampleService.Products));
+            builder
+                .EntityType<Order>()
+                .Function(nameof(OrdersController.DuplicateMethodName))
                 .Returns<string>();
             builder
                 .EntityType<Product>()
-                .Function("DuplicateMethodName")
-                .Returns<string>();
+				.Function(nameof(OrdersController.DuplicateMethodName))
+				.Returns<string>();
         }
     }
 }
