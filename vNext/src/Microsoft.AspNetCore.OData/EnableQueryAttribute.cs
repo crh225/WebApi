@@ -404,6 +404,24 @@ namespace Microsoft.AspNetCore.OData
         {
             var queryToFilter = query;
             var returnAsSingle = false;
+            var type = queryToFilter.GetType();
+            if (queryToFilter is IEnumerable && type.GetTypeInfo().IsGenericType && type.GetGenericArguments()[0] == typeof(object))
+            {
+                var enumerable = queryToFilter as IEnumerable<object>;
+                var cast = true;
+                var objects = enumerable as object[] ?? enumerable.ToArray();
+                if (objects.Any() && !objects.All(elementClrType.IsInstanceOfType))
+                {
+                    cast = false;
+                }
+                if (cast)
+                {
+                    var method = typeof(EnableQueryAttribute)
+                        .GetMethod(nameof(Cast), BindingFlags.Static | BindingFlags.NonPublic)
+                        .MakeGenericMethod(elementClrType);
+                    queryToFilter = method.Invoke(null, new[] { objects });
+                }
+            }
             //var model = GetModel(elementClrType, request, null);
             if (!typeof(IQueryable<>).MakeGenericType(elementClrType).IsInstanceOfType(queryToFilter))
             {
@@ -425,6 +443,11 @@ namespace Microsoft.AspNetCore.OData
                 }
             }
             return result;
+        }
+
+        private static IEnumerable<T> Cast<T>(IEnumerable<object> enumerable)
+        {
+            return enumerable.Cast<T>().AsQueryable();
         }
 
         private static MethodInfo GetGenericMethod(string name, Type elementClrType)
