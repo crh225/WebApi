@@ -624,6 +624,7 @@ namespace Microsoft.AspNetCore.OData
                 // response is a collection.
                 var entries = enumerable as object[] ?? enumerable.Cast<object>().ToArray();
                 var queryable = enumerable as IQueryable ?? entries.AsQueryable();
+	            request.ODataProperties().IsEnumerated = true;
                 queryable = ApplyQuery(queryable, queryOptions, shouldApplyQuery);
                 if (ODataCountMediaTypeMapping.IsCountRequest(request))
                 {

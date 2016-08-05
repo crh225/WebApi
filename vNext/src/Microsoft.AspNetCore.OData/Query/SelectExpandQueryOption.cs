@@ -197,15 +197,15 @@ namespace Microsoft.AspNetCore.OData.Query
         //    return ApplyTo(queryable, settings, AssembliesResolver);
         //}
 
-	    /// <summary>
-	    /// Applies the $select and $expand query options to the given <see cref="IQueryable"/> using the given
-	    /// <see cref="ODataQuerySettings"/>.
-	    /// </summary>
-	    /// <param name="queryable">The original <see cref="IQueryable"/>.</param>
-	    /// <param name="settings">The <see cref="ODataQuerySettings"/> that contains all the query application related settings.</param>
-	    /// <param name="assembliesResolver">The assemblies resolve to use for type resolution</param>
-	    /// <returns>The new <see cref="IQueryable"/> after the filter query has been applied to.</returns>
-	    [SuppressMessage("Microsoft.Performance", "CA1822:MarkMembersAsStatic", Justification = "stopgap. will be used later.")]
+        /// <summary>
+        /// Applies the $select and $expand query options to the given <see cref="IQueryable"/> using the given
+        /// <see cref="ODataQuerySettings"/>.
+        /// </summary>
+        /// <param name="queryable">The original <see cref="IQueryable"/>.</param>
+        /// <param name="settings">The <see cref="ODataQuerySettings"/> that contains all the query application related settings.</param>
+        /// <param name="assembliesResolver">The assemblies resolve to use for type resolution</param>
+        /// <returns>The new <see cref="IQueryable"/> after the filter query has been applied to.</returns>
+        [SuppressMessage("Microsoft.Performance", "CA1822:MarkMembersAsStatic", Justification = "stopgap. will be used later.")]
         public IQueryable ApplyTo(IQueryable queryable, ODataQuerySettings settings, AssembliesResolver assembliesResolver)
         {
             if (queryable == null)
@@ -227,17 +227,20 @@ namespace Microsoft.AspNetCore.OData.Query
             // See: https://www.re-motion.org/jira/browse/RMLNQ-100?jql=project%20%3D%20RMLNQ%20AND%20resolution%20%3D%20Unresolved%20AND%20fixVersion%20%3D%203.0.0%20ORDER%20BY%20priority%20DESC
             var expandedNavigationSelectItems = SelectExpandClause.SelectedItems.OfType<ExpandedNavigationSelectItem>()
                 .ToList();
-            if (expandedNavigationSelectItems.Any(
-                //s => s.FilterOption != null
-                ))
+            if (!ODataQueryOptions.Request.ODataProperties().IsEnumerated)
             {
-                settings.HandleNullPropagation = HandleNullPropagationOption.True;
-                foreach (var expand in expandedNavigationSelectItems)
+                if (expandedNavigationSelectItems.Any(
+                    //s => s.FilterOption != null
+                    ))
                 {
-                    var segment = expand.PathToNavigationProperty.FirstSegment as NavigationPropertySegment;
-                    queryable = Expand(queryable, Context.ElementClrType, segment.NavigationProperty.Name);
+                    settings.HandleNullPropagation = HandleNullPropagationOption.True;
+                    foreach (var expand in expandedNavigationSelectItems)
+                    {
+                        var segment = expand.PathToNavigationProperty.FirstSegment as NavigationPropertySegment;
+                        queryable = Expand(queryable, Context.ElementClrType, segment.NavigationProperty.Name);
+                    }
+                    queryable = Enumerate(queryable, Context.ElementClrType);
                 }
-                queryable = Enumerate(queryable, Context.ElementClrType);
             }
 
             // Ensure we have decided how to handle null propagation

@@ -91,6 +91,7 @@ namespace Microsoft.AspNetCore.OData
         public Uri NextLink { get; set; }
 
 		public bool IsValidODataRequest { get; set; }
+		public bool IsEnumerated { get; set; }
 
 		public SelectExpandClause SelectExpandClause { get; set; }
 
