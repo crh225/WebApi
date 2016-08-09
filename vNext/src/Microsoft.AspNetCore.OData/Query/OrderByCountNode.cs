@@ -1,0 +1,37 @@
+﻿// Copyright (c) Microsoft Corporation.  All rights reserved.
+// Licensed under the MIT License.  See License.txt in the project root for license information.
+
+using Microsoft.AspNetCore.OData.Common;
+using Microsoft.OData.Core.UriParser.Semantic;
+using Microsoft.OData.Edm;
+
+namespace Microsoft.AspNetCore.OData.Query
+{
+	// https://github.com/OData/WebApi/pull/738/commits/2f83271c18870af217f5ebc33c15f6c1af9d8335
+
+	/// <summary>
+	/// Represents an order by <see cref="IEdmProperty"/> expression.
+	/// </summary>
+	public class OrderByCountNode : OrderByNode
+	{
+		/// <summary>
+		/// Initializes a new instance of the <see cref="OrderByCountNode"/> class.
+		/// </summary>
+		/// <param name="orderByClause">The orderby clause representing property access.</param>
+		public OrderByCountNode(OrderByClause orderByClause)
+		{
+			if (orderByClause == null)
+			{
+				throw Error.ArgumentNull("orderByClause");
+			}
+
+			OrderByClause = orderByClause;
+			Direction = orderByClause.Direction;
+		}
+
+		/// <summary>
+		/// Gets the <see cref="OrderByClause"/> of this node.
+		/// </summary>
+		public OrderByClause OrderByClause { get; private set; }
+	}
+}
