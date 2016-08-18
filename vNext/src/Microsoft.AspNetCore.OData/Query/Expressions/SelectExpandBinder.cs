@@ -633,10 +633,18 @@ namespace Microsoft.AspNetCore.OData.Query.Expressions
                         _settings.EnableConstantParameterization);
                 }
             }
+			// HACK: To work around a bug in Entity Framework,
+			// always skip 0 at least if no paging to ensure
+			// all expands work correctly
+			if (!_settings.PageSize.HasValue && (expandedItem?.SkipOption == null))
+			{
+				source = ExpressionHelpers.Skip(source, 0, elementType,
+				_settings.EnableConstantParameterization);
+			}
 
-            // expression
-            //      source.Select((ElementType element) => new Wrapper { })
-            Expression selectedExpresion = Expression.Call(GetSelectMethod(elementType, projection.Type), source, selector);
+			// expression
+			//      source.Select((ElementType element) => new Wrapper { })
+			Expression selectedExpresion = Expression.Call(GetSelectMethod(elementType, projection.Type), source, selector);
 
             if (_settings.HandleNullPropagation == HandleNullPropagationOption.True)
             {
