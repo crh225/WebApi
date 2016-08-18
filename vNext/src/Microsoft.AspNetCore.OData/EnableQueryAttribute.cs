@@ -354,16 +354,17 @@ namespace Microsoft.AspNetCore.OData
             }
         }
 
-        /// <summary>
-        /// Applies the query to the given entity based on incoming query from uri and query settings.
-        /// </summary>
-        /// <param name="query">The original entity from the response message.</param>
-        /// <param name="queryOptions">
-        /// The <see cref="ODataQueryOptions"/> instance constructed based on the incoming request.
-        /// </param>
-        /// <returns>The new entity after the $select and $expand query has been applied to.</returns>
-        public virtual IQueryable ApplyQuery(IQueryable query, ODataQueryOptions queryOptions,
-            bool shouldApplyQuery)
+	    /// <summary>
+	    /// Applies the query to the given entity based on incoming query from uri and query settings.
+	    /// </summary>
+	    /// <param name="query">The original entity from the response message.</param>
+	    /// <param name="queryOptions">
+	    ///     The <see cref="ODataQueryOptions"/> instance constructed based on the incoming request.
+	    /// </param>
+	    /// <param name="shouldApplyQuery"></param>
+	    /// <param name="actionDescriptor"></param>
+	    /// <returns>The new entity after the $select and $expand query has been applied to.</returns>
+	    public virtual IQueryable ApplyQuery(IQueryable query, ODataQueryOptions queryOptions, bool shouldApplyQuery, ActionDescriptor actionDescriptor)
         {
             if (query == null)
             {
@@ -384,12 +385,20 @@ namespace Microsoft.AspNetCore.OData
                     HandleNullPropagationOptionHelper.GetDefaultHandleNullPropagationOption(query);
                 //PageSize = actionDescriptor.PageSize(),
 
-                query = queryOptions.ApplyTo(query, _querySettings);
+	            var pageSize = ResolvePageSize(_querySettings, actionDescriptor);
+	            query = queryOptions.ApplyTo(query, _querySettings, pageSize);
             }
             return query;
         }
 
-        private object InvokeInterceptors(object query, Type elementClrType, ODataQueryOptions queryOptions)
+	    private static int? ResolvePageSize(ODataQuerySettings querySettings, ActionDescriptor actionDescriptor)
+	    {
+		    var queryPageSize = querySettings.PageSize;
+		    var actionPageSize = actionDescriptor.PageSize();
+		    return actionPageSize.IsSet ? actionPageSize.Size : queryPageSize;
+	    }
+
+	    private object InvokeInterceptors(object query, Type elementClrType, ODataQueryOptions queryOptions)
         {
             return ApplyInterceptors(query, elementClrType, queryOptions.Request, _querySettings, queryOptions);
         }
@@ -486,7 +495,8 @@ namespace Microsoft.AspNetCore.OData
         /// The <see cref="ODataQueryOptions"/> instance constructed based on the incoming request.
         /// </param>
         /// <returns>The new entity after the $select and $expand query has been applied to.</returns>
-        public virtual object ApplyQueryObject(object query, ODataQueryOptions queryOptions, bool shouldApplyQuery)
+        public virtual object ApplyQueryObject(object query, ODataQueryOptions queryOptions, bool shouldApplyQuery,
+			ActionDescriptor actionDescriptor)
         {
             if (query == null)
             {
@@ -501,7 +511,7 @@ namespace Microsoft.AspNetCore.OData
 
             if (shouldApplyQuery)
             {
-                query = queryOptions.ApplyTo(query, _querySettings);
+                query = queryOptions.ApplyTo(query, _querySettings);//, ResolvePageSize(_querySettings, actionDescriptor));
             }
             return query;
         }
@@ -538,8 +548,8 @@ namespace Microsoft.AspNetCore.OData
             var shouldApplyQuery =
                 request.GetDisplayUrl() != null &&
                 (!string.IsNullOrWhiteSpace(new Uri(request.GetDisplayUrl()).Query) ||
-                _querySettings.PageSize.HasValue ||
-                result.Value is SingleResult ||
+                _querySettings.PageSize.HasValue || context.ActionDescriptor.PageSize().IsSet ||
+				result.Value is SingleResult ||
                 ODataCountMediaTypeMapping.IsCountRequest(request) ||
                 ContainsAutoExpandProperty(result.Value, request, context.ActionDescriptor));
             if (result.Value != null)
@@ -595,7 +605,7 @@ namespace Microsoft.AspNetCore.OData
                 );
 
             var queryOptions = new ODataQueryOptions(queryContext, request, assembliesResolver);
-            _querySettings.PageSize = _querySettings.PageSize ?? actionDescriptor.PageSize();
+            //_querySettings.PageSize = _querySettings.PageSize ?? actionDescriptor.PageSize();
 
             ValidateQuery(request, queryOptions);
 
@@ -605,41 +615,36 @@ namespace Microsoft.AspNetCore.OData
                 // response is not a collection; we only support $select and $expand on single entities.
                 ValidateSelectExpandOnly(queryOptions);
 
-                var singleResult = result as SingleResult;
+				request.ODataProperties().IsEnumerated = true;
+				var singleResult = result as SingleResult;
                 if (singleResult == null)
                 {
-                    // response is a single entity.
-                    return ApplyQueryObject(result, queryOptions, shouldApplyQuery);
+					// response is a single entity.
+					return ApplyQueryObject(result, queryOptions, shouldApplyQuery, actionDescriptor);
                 }
-                else
-                {
-                    // response is a composable SingleResult. ApplyQuery and call SingleOrDefault.
-                    var queryable = singleResult.Queryable;
-                    queryable = ApplyQuery(queryable, queryOptions, shouldApplyQuery);
-                    return SingleOrDefault(queryable, actionDescriptor);
-                }
+	            // response is a composable SingleResult. ApplyQuery and call SingleOrDefault.
+	            var singleQueryable = singleResult.Queryable;
+				singleQueryable = ApplyQuery(singleQueryable, queryOptions, shouldApplyQuery, actionDescriptor);
+	            return SingleOrDefault(singleQueryable, actionDescriptor);
             }
-            else
-            {
-                // response is a collection.
-                var entries = enumerable as object[] ?? enumerable.Cast<object>().ToArray();
-                var queryable = enumerable as IQueryable ?? entries.AsQueryable();
-	            request.ODataProperties().IsEnumerated = true;
-                queryable = ApplyQuery(queryable, queryOptions, shouldApplyQuery);
-                if (ODataCountMediaTypeMapping.IsCountRequest(request))
-                {
-                    long? count = request.ODataProperties().TotalCount;
+	        // response is a collection.
+	        var entries = enumerable as object[] ?? enumerable.Cast<object>().ToArray();
+	        var queryable = enumerable as IQueryable ?? entries.AsQueryable();
+	        request.ODataProperties().IsEnumerated = true;
+	        queryable = ApplyQuery(queryable, queryOptions, shouldApplyQuery, actionDescriptor);
+	        if (ODataCountMediaTypeMapping.IsCountRequest(request))
+	        {
+		        long? count = request.ODataProperties().TotalCount;
 
-                    if (count.HasValue)
-                    {
-                        // Return the count value if it is a $count request.
-                        return count.Value;
-                    }
-                }
-                return queryable;
-            }
+		        if (count.HasValue)
+		        {
+			        // Return the count value if it is a $count request.
+			        return count.Value;
+		        }
+	        }
+	        return queryable;
 
-            // response is a collection.
+	        // response is a collection.
             //var query = value as IQueryable ?? enumerable.AsQueryable();
 
             //query = queryOptions.ApplyTo(query,

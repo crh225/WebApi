@@ -12,18 +12,7 @@ using ODataSample.Web.OData;
 
 namespace ODataSample.Web.Controllers
 {
-    [EnableQuery]
-    //[HazAuthorize(Policy2 = "Super")]
-    [Route("odata/Clients")]
-    public class ClientsController : Controller
-    {
-        [HttpGet]
-        public IQueryable<Client> Get()
-        {
-            return new Client[] { }.AsQueryable();
-        }
-    }
-    [EnableQuery]
+	[EnableQuery]
 	[Route("odata/Products")]
 	//[EnableCors("AllowAll")]
 	public class ProductsController : ODataCrudController<Product, int>
@@ -47,14 +36,21 @@ namespace ODataSample.Web.Controllers
 
 
 		[HttpGet(nameof(Expanded))]
-		[EnableQuery(AllowedQueryOptions=AllowedQueryOptions.None)]
+		[EnableQuery(AllowedQueryOptions = AllowedQueryOptions.None)]
 		public async Task<IActionResult> Expanded()
-		{			
+		{
 			var orders = Crud.All()
 				.Include(c => c.Customer)
 				.ToList()
 				;
 			return Ok(orders);
+		}
+
+		[HttpGet(nameof(NonPaged))]
+		[PageSize(PageSize.Infinite)]
+		public async Task<IActionResult> NonPaged()
+		{
+			return Ok(Crud.All());
 		}
 
 		// This is needed to prevent action resolution issues
@@ -91,13 +87,13 @@ namespace ODataSample.Web.Controllers
 			return GetName(id, prefix["prefix"].Value<string>());
 		}
 
-	    public override async Task<IActionResult> Post(JObject value)
-	    {
-	        return Unauthorized();
-	    }
+		public override async Task<IActionResult> Post(JObject value)
+		{
+			return Unauthorized();
+		}
 
-	    // GET: api/Products
-		[PageSize(4)]
+		// GET: api/Products
+		[PageSize(PageSize.Infinite)]
 		public override async Task<IQueryable<Product>> Get()
 		{
 			//var db = _sampleService as ApplicationDbContext;

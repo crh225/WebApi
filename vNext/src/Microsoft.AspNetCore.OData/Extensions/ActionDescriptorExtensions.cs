@@ -68,19 +68,20 @@ namespace Microsoft.AspNetCore.OData.Extensions
 
         public static bool HasQueryOption(this ActionDescriptor actionDescriptor)
 		{
-			return actionDescriptor.PageSize().HasValue;
+			return actionDescriptor.PageSize().IsSet;
 		}
 
-		public static int? PageSize(this ActionDescriptor actionDescriptor)
+		public static ActionPageSize PageSize(this ActionDescriptor actionDescriptor)
 		{
-			int? pageSize = null;
 			var controllerActionDescriptor = actionDescriptor as ControllerActionDescriptor;
 			var pageSizeAttribute = controllerActionDescriptor?.MethodInfo.GetCustomAttribute<PageSizeAttribute>();
+			var actionPageSize = new ActionPageSize();
 			if (pageSizeAttribute != null)
 			{
-				pageSize = pageSizeAttribute.Value;
+				actionPageSize.IsSet = true;
+				actionPageSize.Size = pageSizeAttribute.Value;
 			}
-			return pageSize;
+			return actionPageSize;
 		}
 	}
 }

@@ -135,6 +135,11 @@ namespace ODataSample.Web
                 .EntityType<Product>()
 				.Function(nameof(OrdersController.DuplicateMethodName))
 				.Returns<string>();
-        }
-    }
+            builder
+                .EntityType<Product>()
+				.Collection
+				.Function(nameof(ProductsController.NonPaged))
+				.ReturnsCollectionFromEntitySet<Product>(nameof(ISampleService.Products));
+		}
+	}
 }

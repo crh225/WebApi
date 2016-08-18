@@ -27,7 +27,7 @@ namespace ODataSample.Web.Controllers
 
 		// GET: api/Products
 		[HttpGet]
-        [PageSize(6)]
+        [PageSize(2)]
 		public virtual async Task<IQueryable<T>> Get()
 		{
 			return Crud.All();

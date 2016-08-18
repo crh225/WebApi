@@ -111,53 +111,58 @@ namespace Microsoft.AspNetCore.OData.Query
         /// </summary>
         public ODataQueryValidator Validator { get; set; }
 
-        /// <summary>
-        /// Apply the individual query to the given IQueryable in the right order.
-        /// </summary>
-        /// <param name="query">The original <see cref="IQueryable"/>.</param>
-        /// <returns>The new <see cref="IQueryable"/> after the query has been applied to.</returns>
-        public virtual IQueryable ApplyTo(IQueryable query)
+	    /// <summary>
+	    /// Apply the individual query to the given IQueryable in the right order.
+	    /// </summary>
+	    /// <param name="query">The original <see cref="IQueryable"/>.</param>
+	    /// <param name="pageSize">The page size for this query</param>
+	    /// <returns>The new <see cref="IQueryable"/> after the query has been applied to.</returns>
+	    public virtual IQueryable ApplyTo(IQueryable query, int? pageSize)
         {
-            return ApplyTo(query, new ODataQuerySettings());
+            return ApplyTo(query, new ODataQuerySettings(), pageSize);
         }
 
-        /// <summary>
-        /// Apply the individual query to the given IQueryable in the right order.
-        /// </summary>
-        /// <param name="query">The original <see cref="IQueryable"/>.</param>
-        /// <param name="ignoreQueryOptions">The query parameters that are already applied in queries.</param>
-        /// <returns>The new <see cref="IQueryable"/> after the query has been applied to.</returns>
-        public virtual IQueryable ApplyTo(IQueryable query, AllowedQueryOptions ignoreQueryOptions)
-        {
-            _ignoreQueryOptions = ignoreQueryOptions;
-            return ApplyTo(query, new ODataQuerySettings());
-        }
-
-        /// <summary>
-        /// Apply the individual query to the given IQueryable in the right order.
-        /// </summary>
-        /// <param name="query">The original <see cref="IQueryable"/>.</param>
-        /// <param name="querySettings">The settings to use in query composition.</param>
-        /// <param name="ignoreQueryOptions">The query parameters that are already applied in queries.</param>
-        /// <returns>The new <see cref="IQueryable"/> after the query has been applied to.</returns>
-        public virtual IQueryable ApplyTo(IQueryable query, ODataQuerySettings querySettings,
-            AllowedQueryOptions ignoreQueryOptions)
+		/// <summary>
+		/// Apply the individual query to the given IQueryable in the right order.
+		/// </summary>
+		/// <param name="query">The original <see cref="IQueryable"/>.</param>
+		/// <param name="ignoreQueryOptions">The query parameters that are already applied in queries.</param>
+		/// <param name="pageSize">The page size for this query</param>
+		/// <returns>The new <see cref="IQueryable"/> after the query has been applied to.</returns>
+		public virtual IQueryable ApplyTo(IQueryable query, AllowedQueryOptions ignoreQueryOptions,
+			int? pageSize)
         {
             _ignoreQueryOptions = ignoreQueryOptions;
-            return ApplyTo(query, querySettings);
+            return ApplyTo(query, new ODataQuerySettings(), pageSize);
         }
 
-        /// <summary>
-        /// Apply the individual query to the given IQueryable in the right order.
-        /// </summary>
-        /// <param name="query">The original <see cref="IQueryable"/>.</param>
-        /// <param name="querySettings">The settings to use in query composition.</param>
-        /// <returns>The new <see cref="IQueryable"/> after the query has been applied to.</returns>
-        [SuppressMessage(
+		/// <summary>
+		/// Apply the individual query to the given IQueryable in the right order.
+		/// </summary>
+		/// <param name="query">The original <see cref="IQueryable"/>.</param>
+		/// <param name="querySettings">The settings to use in query composition.</param>
+		/// <param name="ignoreQueryOptions">The query parameters that are already applied in queries.</param>
+		/// <param name="pageSize">The page size for this query</param>
+		/// <returns>The new <see cref="IQueryable"/> after the query has been applied to.</returns>
+		public virtual IQueryable ApplyTo(IQueryable query, ODataQuerySettings querySettings,
+            AllowedQueryOptions ignoreQueryOptions, int? pageSize)
+        {
+            _ignoreQueryOptions = ignoreQueryOptions;
+            return ApplyTo(query, querySettings, pageSize);
+        }
+
+		/// <summary>
+		/// Apply the individual query to the given IQueryable in the right order.
+		/// </summary>
+		/// <param name="query">The original <see cref="IQueryable"/>.</param>
+		/// <param name="querySettings">The settings to use in query composition.</param>
+		/// <param name="pageSize">The page size for this query</param>
+		/// <returns>The new <see cref="IQueryable"/> after the query has been applied to.</returns>
+		[SuppressMessage(
             "Microsoft.Maintainability",
             "CA1502:AvoidExcessiveComplexity",
             Justification = "These are simple conversion function and cannot be split up.")]
-        public virtual IQueryable ApplyTo(IQueryable query, ODataQuerySettings querySettings)
+        public virtual IQueryable ApplyTo(IQueryable query, ODataQuerySettings querySettings, int? pageSize)
         {
             if (query == null)
             {
@@ -209,10 +214,10 @@ namespace Microsoft.AspNetCore.OData.Query
             // Result limits require a stable sort to be able to generate a next page link.
             // If either is present in the query and we have permission,
             // generate an $orderby that will produce a stable sort.
-            if (querySettings.EnsureStableOrdering &&
+			if (querySettings.EnsureStableOrdering &&
                 (IsAvailableODataQueryOption(Skip, AllowedQueryOptions.Skip) ||
                  IsAvailableODataQueryOption(Top, AllowedQueryOptions.Top) ||
-                 querySettings.PageSize.HasValue))
+                 pageSize.HasValue))
             {
                 // If there is no OrderBy present, we manufacture a default.
                 // If an OrderBy is already present, we add any missing
@@ -251,13 +256,13 @@ namespace Microsoft.AspNetCore.OData.Query
                 }
             }
 
-            if (querySettings.PageSize.HasValue)
+            if (pageSize.HasValue)
             {
                 bool resultsLimited;
-                result = LimitResults(result, querySettings.PageSize.Value, out resultsLimited);
+                result = LimitResults(result, pageSize.Value, out resultsLimited);
                 if (resultsLimited && Request.GetDisplayUrl() != null && new Uri(Request.GetDisplayUrl()).IsAbsoluteUri && Request.ODataProperties().NextLink == null)
                 {
-                    Uri nextPageLink = Request.GetNextPageLink(querySettings.PageSize.Value);
+                    Uri nextPageLink = Request.GetNextPageLink(pageSize.Value);
                     Request.ODataProperties().NextLink = nextPageLink;
                 }
             }
@@ -266,16 +271,17 @@ namespace Microsoft.AspNetCore.OData.Query
         }
 
 
-        /// <summary>
-        /// Apply the individual query to the given IQueryable in the right order.
-        /// </summary>
-        /// <param name="entity">The original entity.</param>
-        /// <param name="querySettings">The <see cref="ODataQuerySettings"/> that contains all the query application related settings.</param>
-        /// <param name="ignoreQueryOptions">The query parameters that are already applied in queries.</param>  
-        /// <returns>The new entity after the $select and $expand query has been applied to.</returns>     
-        /// <remarks>Only $select and $expand query options can be applied on single entities. This method throws if the query contains any other
-        /// query options.</remarks>
-        public virtual object ApplyTo(object entity, ODataQuerySettings querySettings, AllowedQueryOptions ignoreQueryOptions)
+		/// <summary>
+		/// Apply the individual query to the given IQueryable in the right order.
+		/// </summary>
+		/// <param name="entity">The original entity.</param>
+		/// <param name="querySettings">The <see cref="ODataQuerySettings"/> that contains all the query application related settings.</param>
+		/// <param name="ignoreQueryOptions">The query parameters that are already applied in queries.</param>
+		/// <param name="pageSize">The page size for this query</param>
+		/// <returns>The new entity after the $select and $expand query has been applied to.</returns>     
+		/// <remarks>Only $select and $expand query options can be applied on single entities. This method throws if the query contains any other
+		/// query options.</remarks>
+		public virtual object ApplyTo(object entity, ODataQuerySettings querySettings, AllowedQueryOptions ignoreQueryOptions, int? pageSize)
         {
             _ignoreQueryOptions = ignoreQueryOptions;
             return ApplyTo(entity, new ODataQuerySettings());
