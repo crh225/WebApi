@@ -548,7 +548,7 @@ namespace Microsoft.AspNetCore.OData
             var shouldApplyQuery =
                 request.GetDisplayUrl() != null &&
                 (!string.IsNullOrWhiteSpace(new Uri(request.GetDisplayUrl()).Query) ||
-                _querySettings.PageSize.HasValue || context.ActionDescriptor.PageSize().IsSet ||
+                ResolvePageSize(_querySettings, context.ActionDescriptor).HasValue ||
 				result.Value is SingleResult ||
                 ODataCountMediaTypeMapping.IsCountRequest(request) ||
                 ContainsAutoExpandProperty(result.Value, request, context.ActionDescriptor));
