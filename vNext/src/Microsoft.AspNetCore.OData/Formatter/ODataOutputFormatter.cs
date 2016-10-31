@@ -172,33 +172,41 @@ namespace Microsoft.AspNetCore.OData.Formatter
 
         public override bool CanWriteResult([NotNull]OutputFormatterCanWriteContext context)
         {
-            //var type = context.Object.GetType();
-            //var request = context.Request;
+            Type type = null;
+            var pageResult = context.Object as PageResult<object>;
+            if (pageResult != null)
+            {
+                type = pageResult.Items.GetType();
+            }
+            else
+            {
+                type = context.Object.GetType();
+            }
+            var request = ((OutputFormatterWriteContext)context).HttpContext.Request;
 
-            //if (request != null)
-            //{
-            //    IEdmModel model = request.ODataProperties().Model;
-            //    if (model != null)
-            //    {
-            //        ODataPayloadKind? payloadKind = null;
+            if (request != null)
+            {
+                IEdmModel model = request.ODataProperties().Model;
+                if (model != null)
+                {
+                    ODataPayloadKind? payloadKind = null;
 
-            //        Type elementType;
-            //        if (typeof(IEdmObject).GetTypeInfo().IsAssignableFrom(type.GetTypeInfo()) ||
-            //            (type.IsCollection(out elementType) && typeof(IEdmObject).GetTypeInfo().IsAssignableFrom(elementType.GetTypeInfo())))
-            //        {
-            //            payloadKind = GetEdmObjectPayloadKind(type, request);
-            //        }
-            //        else
-            //        {
-            //            payloadKind = GetClrObjectResponsePayloadKind(type, model, request);
-            //        }
+                    Type elementType;
+                    if (typeof(IEdmObject).GetTypeInfo().IsAssignableFrom(type.GetTypeInfo()) ||
+                        (type.IsCollection(out elementType) && typeof(IEdmObject).GetTypeInfo().IsAssignableFrom(elementType.GetTypeInfo())))
+                    {
+                        payloadKind = GetEdmObjectPayloadKind(type, request);
+                    }
+                    else
+                    {
+                        payloadKind = GetClrObjectResponsePayloadKind(type, model, request);
+                    }
 
-            //        return payloadKind == null ? false : _payloadKinds.Contains(payloadKind.Value);
-            //    }
-            //}
+                    return payloadKind == null ? false : _payloadKinds.Contains(payloadKind.Value);
+                }
+            }
 
-            //return false;
-            return base.CanWriteResult(context);
+            return false;
         }
 
         private ODataSerializer GetSerializer(Type type, object value, IEdmModel model, ODataSerializerProvider serializerProvider, HttpRequest request)
