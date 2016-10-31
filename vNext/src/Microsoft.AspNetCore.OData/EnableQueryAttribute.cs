@@ -628,7 +628,7 @@ namespace Microsoft.AspNetCore.OData
 	            return SingleOrDefault(singleQueryable, actionDescriptor);
             }
 	        // response is a collection.
-	        var entries = enumerable as object[] ?? enumerable.Cast<object>().ToArray();
+	        var entries = enumerable as object[] ?? enumerable.Cast<object>();
 	        var queryable = enumerable as IQueryable ?? entries.AsQueryable();
 	        request.ODataProperties().IsEnumerated = true;
 	        queryable = ApplyQuery(queryable, queryOptions, shouldApplyQuery, actionDescriptor);
