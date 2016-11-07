@@ -1,5 +1,5 @@
 {
-  "version": "1.0.0-rtm-00016-ldc",
+  "version": "1.0.0-rtm-00016-ldc-2",
   "description": "Microsoft.AspNetCore.OData",
 
   "dependencies": {
