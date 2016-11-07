@@ -11,7 +11,7 @@ using System.Linq;
 namespace Microsoft.AspNetCore.OData
 {
 	[ApiExplorerSettings(IgnoreApi = true)]
-	//[Route("odata")]
+	[Route("odata")]
 	public class MetadataController : Controller
 	{
 		private readonly IEdmModel _model;
