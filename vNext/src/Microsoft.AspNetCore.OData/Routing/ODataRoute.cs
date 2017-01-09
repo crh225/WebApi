@@ -43,11 +43,25 @@ namespace Microsoft.AspNetCore.OData.Routing
             uri = new Uri(remaining.ToString(), UriKind.Relative);
             
             context.HttpContext.ODataProperties().Model = _model;
-            var parser = new ODataUriParser(_model, uri);
+
+            var remainingArray = remaining.Value.Split('/');
+            string serviceRootPath = "http://service-root/";
+            ODataUriParser parser;
+
+            if (remainingArray.Length == 3)
+            {
+                serviceRootPath += remainingArray[1] + "/";
+                parser = new ODataUriParser(_model, new Uri(serviceRootPath), uri);
+            }
+            else
+            {
+                parser = new ODataUriParser(_model, uri);
+            }
+
             var path = parser.ParsePath();
             context.HttpContext.ODataProperties().NewPath = path;
             context.HttpContext.ODataProperties().Path =
-                context.HttpContext.ODataPathHandler().Parse(_model, "http://service-root/", remaining.ToString());
+                context.HttpContext.ODataPathHandler().Parse(_model, serviceRootPath, remaining.ToString());
             context.HttpContext.ODataProperties().IsValidODataRequest = true;
             var ase = context.HttpContext.RequestServices.GetRequiredService<IActionSelector>();
             await _m.RouteAsync(context);

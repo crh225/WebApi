@@ -149,15 +149,15 @@ namespace Microsoft.AspNetCore.OData.Routing.Conventions
 						template = template.Substring(odataPrefix.Length).Trim('/');
 						if (template != routeTemplate.Trim('/'))
 						{
-						    return false;
+						    //return false;
 						    //if (controllerName != "*")
 						    //{
 						    //    return false;
 						    //}
-						    //if (!template.EndsWith(routeTemplate))
-						    //{
-						    //    return false;
-						    //}
+						    if (!template.EndsWith("/" + routeTemplate))
+						    {
+						        return false;
+						    }
 						}
 					}
 					else
