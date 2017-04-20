@@ -29,6 +29,9 @@ namespace Microsoft.AspNetCore.OData.Formatter
 
         public ODataOutputFormatter(ODataSerializerProvider serializerProvider, IEnumerable<ODataPayloadKind> payloadKinds)
         {
+
+            SupportedMediaTypes.Add(MediaTypeHeaderValue.Parse("application/json"));
+
             _messageWriterSettings = new ODataMessageWriterSettings
             {
                 Indent = true,
