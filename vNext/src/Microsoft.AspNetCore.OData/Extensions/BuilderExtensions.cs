@@ -52,6 +52,7 @@ namespace Microsoft.AspNetCore.OData.Extensions
 
 		public static IServiceCollection AddOData<TODataService>(
 			[NotNull] this IServiceCollection services,
+            System.Collections.Generic.List<Type> extraTypes,
 			Action<ODataConventionModelBuilder> after = null
 			)
 			where TODataService : class 
@@ -59,16 +60,26 @@ namespace Microsoft.AspNetCore.OData.Extensions
 			services.AddOData();
 			var type = typeof(TODataService);
 			var assemblyNames = new AssembliesResolver(type.GetTypeInfo().Assembly);
-			var model = DefaultODataModelProvider.BuildEdmModel(
+
+            if (extraTypes != null)
+            {
+                foreach (Type extraType in extraTypes)
+                {
+                    assemblyNames.Assemblies.Add(extraType.GetTypeInfo().Assembly);
+                }
+            }
+
+            var model = DefaultODataModelProvider.BuildEdmModel(
                 type, 
+                extraTypes,
                 assemblyNames, 
                 after);
 		    services.AddSingleton(model);
 		    services.AddSingleton(assemblyNames);
 			return services;
-	    }
+	    }        
 
-	    public static IApplicationBuilder UseOData(
+        public static IApplicationBuilder UseOData(
             [NotNull] this IApplicationBuilder app, 
             string prefix
             ) 

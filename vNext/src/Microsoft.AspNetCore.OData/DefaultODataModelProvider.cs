@@ -10,7 +10,7 @@ namespace Microsoft.AspNetCore.OData
 {
     internal class DefaultODataModelProvider
     {
-        public static IEdmModel BuildEdmModel(Type apiContextType, AssembliesResolver assembliesResolver, Action<ODataConventionModelBuilder> after = null)
+        public static IEdmModel BuildEdmModel(Type apiContextType, System.Collections.Generic.List<Type> extraTypes, AssembliesResolver assembliesResolver, Action<ODataConventionModelBuilder> after = null)
         {
             var builder = new ODataConventionModelBuilder(assembliesResolver)
             {
@@ -24,8 +24,23 @@ namespace Microsoft.AspNetCore.OData
                 var entity = builder.AddEntityType(entityClrType);
                 builder.AddEntitySet(property.Name, entity);
             }
-			after?.Invoke(builder);
-			var edmModel = builder.GetEdmModel();
+
+            if (extraTypes != null)
+            {
+                foreach (Type extraType in extraTypes)
+                {
+                    publicProperties = extraType.GetPropertiesInternal(BindingFlagsInternal.Public | BindingFlagsInternal.Instance);
+                    foreach (var property in publicProperties)
+                    {
+                        var entityClrType = TypeHelper.GetImplementedIEnumerableType(property.PropertyType);
+                        var entity = builder.AddEntityType(entityClrType);
+                        builder.AddEntitySet(property.Name, entity);
+                    }
+                }
+            }
+
+            after?.Invoke(builder);
+			var edmModel = builder.GetEdmModel();            
             return edmModel;
 		}
     }
