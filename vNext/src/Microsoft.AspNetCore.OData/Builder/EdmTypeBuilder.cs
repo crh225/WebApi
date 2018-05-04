@@ -159,8 +159,9 @@ namespace Microsoft.AspNetCore.OData.Builder
 						{
 							continue;
 						}
-						EdmPrimitiveTypeKind typeKind = GetTypeKind(primitiveProperty.PropertyInfo.PropertyType);
-						IEdmTypeReference primitiveTypeReference = EdmCoreModel.Instance.GetPrimitive(
+                        EdmPrimitiveTypeKind typeKind = primitiveProperty.TargetEdmTypeKind ??
+                                                        GetTypeKind(primitiveProperty.PropertyInfo.PropertyType);
+                        IEdmTypeReference primitiveTypeReference = EdmCoreModel.Instance.GetPrimitive(
 							typeKind,
 							primitiveProperty.OptionalProperty);
 

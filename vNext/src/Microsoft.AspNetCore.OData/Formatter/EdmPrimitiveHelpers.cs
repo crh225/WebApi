@@ -9,6 +9,7 @@ using System.Reflection;
 using System.Xml.Linq;
 using Microsoft.AspNetCore.OData.Common;
 using Microsoft.AspNetCore.OData.Properties;
+using Microsoft.OData.Edm.Library;
 
 namespace Microsoft.AspNetCore.OData.Formatter
 {
@@ -23,6 +24,20 @@ namespace Microsoft.AspNetCore.OData.Formatter
             if (value.GetType() == type || value.GetType() == Nullable.GetUnderlyingType(type))
             {
                 return value;
+            }
+
+            if (value is Date)
+            {
+                Date dt = (Date)value;
+                return (DateTime)dt;
+            }
+            else if (type == typeof(TimeSpan))
+            {
+                if (value is TimeOfDay)
+                {
+                    TimeOfDay tod = (TimeOfDay)value;
+                    return (TimeSpan)tod;
+                }
             }
 
             string str = value as string;

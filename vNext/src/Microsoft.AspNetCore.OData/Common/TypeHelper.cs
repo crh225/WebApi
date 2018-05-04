@@ -107,7 +107,20 @@ namespace Microsoft.AspNetCore.OData.Common
 			return underlyingTypeOrSelf.GetTypeInfo().IsEnum;
 		}
 
-		public static Type GetInnerElementType(this Type type)
+        public static bool IsDateTime(Type type)
+        {
+            Type underlyingTypeOrSelf = GetUnderlyingTypeOrSelf(type);
+            return Type.GetTypeCode(underlyingTypeOrSelf) == TypeCode.DateTime;
+        }
+
+        public static bool IsTimeSpan(Type type)
+        {
+            Type underlyingTypeOrSelf = GetUnderlyingTypeOrSelf(type);
+            return underlyingTypeOrSelf == typeof(TimeSpan);
+        }
+
+
+        public static Type GetInnerElementType(this Type type)
 		{
 			Type elementType;
 			type.IsCollection(out elementType);

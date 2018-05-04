@@ -517,12 +517,15 @@ namespace Microsoft.AspNetCore.OData.Formatter.Serialization
 			IEdmTypeReference propertyType = structuralProperty.Type;
 			if (propertyValue != null)
 			{
-				IEdmTypeReference actualType = writeContext.GetEdmType(propertyValue, propertyValue.GetType());
-				if (propertyType != null && propertyType != actualType)
-				{
-					propertyType = actualType;
-				}
-			}
+                if (!propertyType.IsPrimitive() && !propertyType.IsEnum())
+                {
+                    IEdmTypeReference actualType = writeContext.GetEdmType(propertyValue, propertyValue.GetType());
+				    if (propertyType != null && propertyType != actualType)
+				    {
+					    propertyType = actualType;
+                    }
+                }
+            }
 
 			return await serializer.CreateProperty(propertyValue, propertyType, structuralProperty.Name, writeContext, entityInstanceContext);
 		}

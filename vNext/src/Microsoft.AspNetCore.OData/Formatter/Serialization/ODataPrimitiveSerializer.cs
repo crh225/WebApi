@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.OData.Extensions;
 using Microsoft.AspNetCore.OData.Reflection;
 using Microsoft.OData.Core;
 using Microsoft.OData.Edm;
+using Microsoft.OData.Edm.Library;
 
 namespace Microsoft.AspNetCore.OData.Formatter.Serialization
 {
@@ -112,7 +113,7 @@ namespace Microsoft.AspNetCore.OData.Formatter.Serialization
 				return null;
 			}
 
-			object supportedValue = ConvertUnsupportedPrimitives(value);
+			object supportedValue = ConvertPrimitiveValue(value, primitveType);
 			ODataPrimitiveValue primitive = new ODataPrimitiveValue(supportedValue);
 
 			if (writeContext != null)
@@ -123,7 +124,30 @@ namespace Microsoft.AspNetCore.OData.Formatter.Serialization
 			return primitive;
 		}
 
-		internal static object ConvertUnsupportedPrimitives(object value)
+        internal static object ConvertPrimitiveValue(object value, IEdmPrimitiveTypeReference primitiveType)
+        {
+            if (value == null)
+            {
+                return null;
+            }
+
+            Type type = value.GetType();
+            if (primitiveType != null && primitiveType.IsDate() && TypeHelper.IsDateTime(type))
+            {
+                Date dt = (DateTime)value;
+                return dt;
+            }
+
+            if (primitiveType != null && primitiveType.IsTimeOfDay() && TypeHelper.IsTimeSpan(type))
+            {
+                TimeOfDay tod = (TimeSpan)value;
+                return tod;
+            }
+
+            return ConvertUnsupportedPrimitives(value);
+        }
+
+        internal static object ConvertUnsupportedPrimitives(object value)
 		{
 			if (value != null)
 			{
@@ -144,18 +168,57 @@ namespace Microsoft.AspNetCore.OData.Formatter.Serialization
 					case TypeCodeInternal.UInt64:
 						return checked((long)(ulong)value);
 
-					case TypeCodeInternal.DateTime:
-						DateTime dateTime = (DateTime)value;
-						TimeZoneInfo timeZone = TimeZoneInfoHelper.TimeZone;
-						if (dateTime.Kind == DateTimeKind.Utc || dateTime.Kind == DateTimeKind.Local)
-						{
-							return new DateTimeOffset(dateTime.ToUniversalTime()).ToOffset(timeZone.BaseUtcOffset);
-						}
+                    case TypeCodeInternal.DateTime:
+                        DateTime dateTime = (DateTime)value;
 
-						DateTimeOffset dateTimeOffset = new DateTimeOffset(dateTime, timeZone.GetUtcOffset(dateTime));
-						return dateTimeOffset.ToUniversalTime().ToOffset(timeZone.BaseUtcOffset);
+                        TimeZoneInfo timeZone = TimeZoneInfoHelper.TimeZone;
+                        TimeSpan utcOffset = timeZone.GetUtcOffset(dateTime);
+                        if (utcOffset >= TimeSpan.Zero)
+                        {
+                            if (dateTime <= DateTime.MinValue + utcOffset)
+                            {
+                                return DateTimeOffset.MinValue;
+                            }
+                        }
+                        else
+                        {
+                            if (dateTime >= DateTime.MaxValue + utcOffset)
+                            {
+                                return DateTimeOffset.MaxValue;
+                            }
+                        }
 
-					default:
+                        if (dateTime.Kind == DateTimeKind.Local)
+                        {
+                            TimeZoneInfo localTimeZoneInfo = TimeZoneInfo.Local;
+                            TimeSpan localTimeSpan = localTimeZoneInfo.GetUtcOffset(dateTime);
+                            if (localTimeSpan < TimeSpan.Zero)
+                            {
+                                if (dateTime >= DateTime.MaxValue + localTimeSpan)
+                                {
+                                    return DateTimeOffset.MaxValue;
+                                }
+                            }
+                            else
+                            {
+                                if (dateTime <= DateTime.MinValue + localTimeSpan)
+                                {
+                                    return DateTimeOffset.MinValue;
+                                }
+                            }
+
+                            return TimeZoneInfo.ConvertTime(new DateTimeOffset(dateTime), timeZone);
+                        }
+
+                        if (dateTime.Kind == DateTimeKind.Utc)
+                        {
+                            return TimeZoneInfo.ConvertTime(new DateTimeOffset(dateTime), timeZone);
+                        }
+
+                        return new DateTimeOffset(dateTime, timeZone.GetUtcOffset(dateTime));
+
+
+                    default:
 						if (type == typeof(char[]))
 						{
 							return new String(value as char[]);
